@@ -1,0 +1,244 @@
+/*
+color scheme:
+Light: https://colorhunt.co/palette/6e85b7b2c8dfc4d7e0f8f9d7
+Dark: https://colorhunt.co/palette/2c3333395b64a5c9cae7f6f2
+*/
+
+.App {
+  font-family: "Ubuntu", sans-serif;
+  width: 100vw;
+  height: 100vh;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  margin: 0px;
+}
+
+.mainHeading {
+  font-size: 1.5em;
+  padding: 0px;
+  margin: 10px 0px 0px 50px;
+}
+
+.delimiter {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+
+/* light mode */
+#light {
+  color: #6E85B7;
+}
+
+/* dark mode */
+#dark {
+  color: #E7F6F2;
+}
+
+header {
+  padding: 5px;
+}
+
+#light header {
+  background-color: #F8F9D7;
+  border-bottom: 1px solid #6E85B7;
+}
+
+#dark header {
+  background-color: #395B64;
+  border-bottom: 1px solid #E7F6F2;
+}
+
+header li {
+  display: inline;
+  margin: 10px;
+}
+
+/* status messages */
+.bad {
+  color: red;
+}
+
+/* status messages */
+.good {
+  color: #00cd09;
+}
+
+nav {
+  float: left;
+}
+
+/* menu items */
+.navlink {
+  text-decoration: underline;
+}
+
+#light .navlink {
+  color: #6E85B7;
+}
+
+#dark .navlink {
+  color: #E7F6F2;
+}
+
+.navlinkUnselected {
+  font-weight: normal;
+}
+
+.navlinkSelected {
+  font-weight: bold;
+}
+
+/* theme selector menu */
+.themeSetting {
+  float: right;
+  margin-right: 10px;
+}
+
+/* theme selector menu */
+.themeSetting span {
+  font-size: 0.8em;
+  width: 100%;
+}
+
+/* theme selector menu */
+.themeSetting button {
+  width: 100%;
+  margin: 5px 0px;
+}
+
+/* theme selector menu */
+.themeSetting .themeKey {
+  float: left;
+}
+
+/* theme selector menu */
+.themeSetting .themeVal {
+  float: right;
+  font-weight: bold;
+}
+
+article {
+  max-width: 900px;
+  border-radius: 4px;
+  margin: 40px auto;
+  padding: 10px;
+}
+
+#light article {
+  border: 1px solid #6E85B7;
+  background-color: #F8F9D7;
+}
+
+#dark article {
+  border: 1px solid #E7F6F2;
+  background-color: #395B64;
+}
+
+article table {
+  width: 100%;
+}
+
+article table button {
+  height: auto;
+}
+
+#light article table a {
+  color: #6E85B7;
+}
+
+#dark article table a {
+  color: #E7F6F2;
+}
+
+article table thead {
+  text-align: left;
+}
+
+#light article table thead {
+  color: #6E85B7;
+  background-color: #C4D7E0;
+}
+
+#dark article table thead {
+  color: #2C3333;
+  background-color: #E7F6F2;
+}
+
+article table tfoot {
+  text-align: center;
+}
+
+#light article table tfoot {
+  color: #6E85B7;
+  background-color: #C4D7E0;
+}
+
+#dark article table tfoot {
+  color: #2C3333;
+  background-color: #E7F6F2;
+}
+
+select, button {
+  height: 2.5em;
+}
+
+article select {
+  padding: 0.5em;
+}
+
+article .textInput {
+  padding: 8px;
+  border-radius: 6px;
+}
+
+#light article .textInput {
+  border: 1px solid #6E85B7;
+}
+
+#dark article .textInput {
+  border: 1px solid #E7F6F2;
+}
+
+.sameLine {
+  padding: auto 0px;
+  line-height: 2.5em;
+  vertical-align: middle;
+}
+
+.cautionBtn {
+  border: 3px solid red;
+  border-radius: 6px;
+}
+
+.okBtn {
+  border: 3px solid #00cd09;
+  border-radius: 6px;
+}
+
+.floatBlock {
+  float:left;
+}
+
+.sideMargin {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.help {
+  margin-left: 5px;
+  margin-right: 5px;
+  padding: 1px;
+  font-weight: bold;
+  cursor: default;
+}
+
+.clearfix {
+  clear: both;
+}
+
+footer {
+  padding: 0px 5px;
+}
