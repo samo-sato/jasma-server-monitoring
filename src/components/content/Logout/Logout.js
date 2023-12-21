@@ -1,43 +1,30 @@
-import { useRef, useState, useEffect } from 'react'
-import fetchAPI from '../../../fetchAPI'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import LoadingIndicator from '../../LoadingIndicator.js'
+import { generateStatusMsg } from '../../../functions.js'
+import { logout } from '../../../fetchAPI.js'
 
-function Logout() {
+function Logout(props) {
+
+  const navigate = useNavigate()
 
   // useState
   const [pageContent, setPageContent] = useState(null)
 
-  // useEffect workaround
-  const effectRan = useRef(false)
   useEffect(() => {
-    if (effectRan.current === false) {
 
       // setting relevant page content while logout functionality executes
-      setPageContent(<p>Logging out in progress...</p>)
+      setPageContent(<LoadingIndicator text="Logging out" />)
 
       // logout funcionality
-      fetchAPI.authorized() // first check if user is not already logged out
+      logout() // logout function
         .then(response => {
-          fetchAPI.logout() // logout function
-            .then(response => {
-              window.location.replace('/')
-              console.log('User logged out successfuly')
-              setPageContent(<p>Log out successful</p>)
-            })
-            .catch(error => {
-              console.log(error)
-              console.log('Logout error')
-            })
+          props.onLogout()
+          navigate('/login')
         })
         .catch(error => {
-          console.log(error)
-          console.log('User was propably already logged out')
-          window.location.replace('/')
+          setPageContent(generateStatusMsg('Logout failed', 'bad'))
         })
-
-      return () => {
-        effectRan.current = true
-      }
-    }
 
   }, [])
 

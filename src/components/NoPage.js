@@ -1,8 +1,9 @@
-// 404 page not found
+// 404 page not found component wrapper
 
-import NoPageContent from './NoPageContent'
+import NoPageContent from './NoPageContent.js'
 
 function NoPage() {
+
   return (
     <article>
       <NoPageContent />

@@ -1,60 +1,56 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useState } from 'react'
-import fetchAPI from '../../../fetchAPI'
+import { getStats } from '../../../fetchAPI.js'
+import { PARSE_INT_BASE, msToWords } from '../../../globals.js'
+import LoadingIndicator from '../../LoadingIndicator.js'
 
 function Home() {
-
-  // useEffect ran twice workaround
-  const effectRan = useRef(false)
 
   // react "useState" hook
   const [statsData, setStatsData] = useState(null)
 
   useEffect(() => {
-    if (effectRan.current === false) { // useEffect ran twice workaround
-      fetchAPI.getStats()
-        .then(response => {
-          setStatsData(response)
-        })
-        .catch(error => {
-          throw new Error(error)
-        })
-
-
-      // useEffect ran twice workaround
-      return () => {
-        effectRan.current = true
-      }
-    }
-
+    getStats() // fetch stats data
+      .then(response => {
+        setStatsData(response)
+      })
+      .catch(error => {
+        console.log(error)
+      })
   }, [])
 
   const readStats = {
-    getEnabled: function () {
+    getEnabled: function () { // gets number of enabled Watchdogs
       return statsData.length
     },
-    getOffline: function () {
+    getOffline: function () { // gets number of Watchdogs signaling off-line status
       return statsData.filter(watchdog => watchdog.is_online === 0).length
     },
-    getOnline: function () {
+    getOnline: function () { // gets number of Watchdogs signaling on-line status
       return statsData.filter(watchdog => watchdog.is_online === 1).length
     }
   }
 
   if (statsData) {
+
+    const cNameEnabled = readStats.getEnabled(statsData) === 0 ? "bad" : "good"
+    const cNameOff     = readStats.getOffline(statsData) === 0 ? "good" : "bad"
+    const cNameOn      = readStats.getOnline(statsData)  === 0 ? "bad" : "good"
+
     return (
       <article>
-        <h1>Some basic stats</h1>
-        <p><b>{readStats.getEnabled(statsData)}</b> watchdogs currently enabled</p>
-        <p><b>{readStats.getOffline(statsData)}</b> watchdogs signaling off-line status</p>
-        <p><b>{readStats.getOnline(statsData)}</b> watchdogs signaling on-line status</p>
+        <h1>Basic stats</h1>
+        <p className={cNameEnabled}><b>{readStats.getEnabled(statsData)}</b> Watchdog(s) currently enabled</p>
+        <p className={cNameOff}><b>{readStats.getOffline(statsData)}</b> Watchdog(s) signaling off-line status</p>
+        <p className={cNameOn}><b>{readStats.getOnline(statsData)}</b> Watchdog(s) signaling on-line status</p>
+        <p><i>Monitoring is executed every {msToWords(parseInt(process.env.REACT_APP_REPEAT_DELAY, PARSE_INT_BASE))}</i></p>
         <p><i>Refresh this page to update stats</i></p>
       </article>
     )
   } else {
     return (
       <article>
-        <p>Loading stats</p>
+        { <LoadingIndicator text="Loading stats" /> }
       </article>
     )
   }

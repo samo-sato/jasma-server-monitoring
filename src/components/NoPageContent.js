@@ -1,10 +1,10 @@
-// 404 page not found
+// 404 page not found component content
 
 function NoPageContent() {
   return (
     <div>
-      <h1>404</h1>
-      <p>This page should not exist</p>
+      <h1>404 not found</h1>
+      <p>According to the cosmic laws, this page shall not exist.</p>
     </div>
   )
 }

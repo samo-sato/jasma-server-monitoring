@@ -1,72 +1,42 @@
 import { useState, useRef, useEffect } from 'react'
-import fetchAPI from '../../../fetchAPI'
-import { generateStatusMsg, elementToggle, generateHelp } from '../../../functions'
+import { updateSettings, getSettings } from '../../../fetchAPI.js'
+import { generateStatusMsg, elementToggle } from '../../../functions.js'
+import LoadingIndicator from '../../LoadingIndicator.js'
 
 function Settings() {
 
   // useState
-  const [mainContent, setMainContent] = useState(<p>Loading data...</p>)
+  const [mainContent, setMainContent] = useState(<LoadingIndicator text="Loading settings" />)
   const [statusMsg, setStatusMsg] = useState(null)
 
   // react "useRef" hook
   const inputs = {} // using it to get data from input fields
-  inputs.scanning_interval = useRef(null)
-  inputs.token_expiration = useRef(null)
+  inputs.email = useRef(null)
   const btnSave = useRef(null) // save button ref
 
-  // useEffect ran twice workaround
-  const effectRan = useRef(false)
   useEffect(() => {
-    if (effectRan.current === false) {
 
-      // fetching current app parameters, it will be used in editable input fields as placeholders
-      fetchAPI.getParams()
-        .then(params => {
-
-          // options elements for selectobxes where user selects number of seconds as input values
-          let secondOoptions = []
-          let seconds = [10, 20, 30, 60, 120, 180, 300, 600, 1800, 3600, 14400]
-          seconds.forEach((value, index) => {
-            secondOoptions.push(<option value={value*1000} key={index}>{value}</option>)
-          })
-
-          // ...
-          let minuteOptions = []
-          let minutes = [1, 5, 10, 30, 60, 240, 480, 1440, 10080]
-          minutes.forEach((value, index) => {
-            minuteOptions.push(<option value={value*60} key={index}>{value}</option>)
-          })
-
+      // fetching current user's settings, it will be used in editable input fields as placeholders
+      getSettings()
+        .then(settings => {
           setMainContent(
             <>
 
               <div className="floatBlock">
                 <div className="sameLine">
-                  <span>Scanning interval</span>
-                </div>
-                <div className="sameLine">
-                  <span>Login token duration</span>
+                  <span>Email address for alerts (optional)</span>
                 </div>
               </div>
 
               <div className="floatBlock">
                 <div className="sameLine">
-                  <select className="sideMargin" ref={inputs.scanning_interval} defaultValue={params.scanning_interval}>
-                    {secondOoptions}
-                  </select>
-                  <span>seconds{generateHelp('The "scanning interval" parameter refers to the time duration, measured in seconds, between consecutive server monitoring checks, allowing the user to adjust how frequently the server\'s status is monitored.')}</span>
-                </div>
-                <div className="sameLine">
-                  <select className="sideMargin" ref={inputs.token_expiration} defaultValue={params.token_expiration}>
-                    {minuteOptions}
-                  </select>
-                  <span>minutes{generateHelp('Set the automatic log-out time for the user. The changes will take effect upon the user\'s next log-in.')}</span>
+                  <input ref={inputs.email} defaultValue={settings.email} className="textInput marginLeft" onKeyUp={handleSave} />
                 </div>
               </div>
-
               <div className="clearfix">
               </div>
-
+              { (settings.emailActive === 0 && settings.email !== null) && <p className="bad">Email is not activated, please open the activation link we have sent you before</p> }
+              { settings.emailUnsubscribed && <p className="bad">This email address has been unsubscribed. Please choose a different email or opt for a non-email option.</p> }
               <button value="save" className="okBtn" ref={btnSave} onClick={handleSave}>
                 Save changes
               </button>
@@ -76,39 +46,32 @@ function Settings() {
         })
         .catch(error => {
           console.log(error)
-          console.log('Error while fetching parameters from DB')
+          console.log('Error while fetching settings from DB')
         })
 
-      return () => {
-        effectRan.current = true
-      }
-    }
-
-  })
+  }, [])
 
   // handle situation after user clicks "save" button
   function handleSave(e) {
+    if (e.type === 'click' || e.keyCode === 13) { // continue after user click on button
 
-    if (e.type === 'click') { // continue after user click on button
-
-      setStatusMsg(generateStatusMsg('Please wait...'))
+      setStatusMsg(<LoadingIndicator text="Saving changes" />)
       elementToggle.disable(btnSave)
 
-      const newParams = {
-        scanning_interval: inputs.scanning_interval.current.value,
-        token_expiration: inputs.token_expiration.current.value
+      const newSettings = {
+        email: inputs.email.current.value
       }
 
-      fetchAPI.updateParams(newParams)
+      updateSettings(newSettings)
         .then(response => {
           setStatusMsg(generateStatusMsg(response.data, 'good'))
           elementToggle.enable(btnSave)
         })
         .catch(error => {
-          let err = error ? error : 'Server error'
-          setStatusMsg(generateStatusMsg(err, 'bad'))
+          setStatusMsg(generateStatusMsg(error, 'bad'))
           elementToggle.enable(btnSave)
         })
+
     }
 
   }
@@ -117,7 +80,7 @@ function Settings() {
     <article>
       <h1>Settings</h1>
       { mainContent }
-      { statusMsg }
+      <div className="sameLine">{ statusMsg }</div>
     </article>
   )
 }

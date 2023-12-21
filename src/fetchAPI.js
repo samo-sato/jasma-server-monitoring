@@ -1,351 +1,399 @@
-import { constants } from './constants'
+import { urlBaseWithPort, restrictedPath } from './globals.js'
 
-// API server endpoint root
-const backendRoot = window.location.protocol + '//' + window.location.hostname + ':' + constants.backendPort
+// this file handles all client-side API requests/responses
 
-// object with methods for interacting with API server
-// each method returns promise with API response
-const fetchAPI = {
+// set base URL of public API server
+const baseUrl =  urlBaseWithPort(process.env.REACT_APP_PUBLIC_PORT_API, true)
 
-  // part of "options" (for "fetch" method) argument that will be used many times
-  options: {
-    credentials: 'include',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json'
-    }
-  },
+// generic unspecified server error message
+const serErr = 'Server error'
 
-  // checking if user has valid auth token (is logged in or not)
-  authorized: function () {
-    const resource = backendRoot + '/authorized'
-    const opt = this.options
-    return fetch(resource, opt)
-            .then(response => {
-              if (!response.ok) {
-                return new Promise((resolve, reject) => {
-                  reject(false)
-                })
-              }
-              return response.json().then(jsonResponse => {
-                return jsonResponse
-              })
-            })
-            .catch(error => {
-              return new Promise((resolve, reject) => {
-                reject(error)
-              })
-            })
-  },
-
-  // login
-  login: function (password) {
-    const resource = `${backendRoot}/${constants.urlNonAuth}`
-    const body = JSON.stringify({
-      userName: 'admin',
-      password: password
-    })
-    const opt = {
-      ...this.options,
-      method: 'POST',
-      body: body
-    }
-    return fetch(resource, opt)
-            .then(response => {
-              return response.json() // returning promise that resolves to JSON object
-                .then(jsonResponse => {
-                  return new Promise((resolve, reject) => {
-                    resolve(
-                      {
-                        authorized: response.ok, // login status (if login was successful or not)
-                        message: jsonResponse.message // status message for user
-                      }
-                    )
-                  })
-                })
-            })
-            .catch(error => {
-              return {
-                authorized: false,
-                message: 'Server fetch error'
-              }
-            })
-  },
-
-  // logout
-  logout: function () {
-    const resource = `${backendRoot}/${constants.urlAuthOnly}/logout`
-    const opt = {
-      ...this.options,
-      method: 'POST'
-    }
-    return fetch(resource, opt)
-            .then(response => {
-              if (!response.ok) {
-                return new Promise((resolve, reject) => {
-                  reject(response.status)
-                })
-              }
-              return response.json().then(jsonResponse => {
-                return jsonResponse
-              })
-            })
-            .catch(error => {
-              return new Promise((resolve, reject) => {
-                reject(error)
-              })
-            })
-  },
-
-  // fetch "Watchdog" items from API server
-  getWatchdogs: function () {
-    const resource = `${backendRoot}/${constants.urlAuthOnly}/watchdogs`
-    const opt = this.options
-    return fetch(resource, opt)
-            .then(response => {
-              if (!response.ok) {
-                return new Promise((resolve, reject) => {
-                  reject()
-                })
-              }
-              return response.json().then(jsonResponse => {
-                return jsonResponse
-              })
-            })
-            .catch(error => {
-              console.log(error)
-            })
-  },
-
-  // fetch "Watchdog" single item from API server
-  getWatchdog: function (id) {
-    const resource = `${backendRoot}/${constants.urlAuthOnly}/watchdogs/${id}`
-    const opt = this.options
-    return fetch(resource, opt)
-            .then(response => {
-              if (!response.ok) {
-                return new Promise((resolve, reject) => {
-                  reject()
-                })
-              }
-              return response.json().then(jsonResponse => {
-                return jsonResponse
-              })
-            })
-            .catch(error => {
-              console.log(error)
-            })
-  },
-
-  // update "Watchdog" item using fetch
-  updateWatchdog: function (id, watchdogData) {
-    const resource = `${backendRoot}/${constants.urlAuthOnly}/watchdogs/${id}`
-    const opt = {
-      ...this.options,
-      method: 'PUT',
-      body: JSON.stringify(watchdogData)
-    }
-    return fetch(resource, opt)
-            .then(response => {
-              if (response.ok) {
-                return response.json() // success
-              } else {
-                return new Promise((resolve, reject) => {
-                  response.json()
-                    .then(error => {
-                      reject(error.data)
-                    })
-                    .catch(error => {
-                      reject(error.data)
-                    })
-                })
-              }
-            })
-            .catch(error => {
-              return new Promise((resolve, reject) => {
-                reject(error)
-              })
-            })
-  },
-
-  // delete "Watchdog" item using fetch
-  deleteWatchdog: function (id) {
-    const resource = `${backendRoot}/${constants.urlAuthOnly}/watchdogs/${id}`
-    const opt = {
-      ...this.options,
-      method: 'DELETE'
-    }
-
-    return fetch(resource, opt)
-            .then(response => {
-              if (response.status === 204) {
-                return new Promise((resolve, reject) => {
-                  resolve('Watchdog deleted successfully') // success
-                })
-              } else {
-                return new Promise((resolve, reject) => {
-                  reject('Server error')
-                })
-              }
-            })
-            .catch(error => {
-              return new Promise((resolve, reject) => {
-                reject('Server error')
-              })
-            })
-  },
-
-  // add "Watchdog" item using fetch
-  addWatchdog: function (watchdogData) {
-    const resource = `${backendRoot}/${constants.urlAuthOnly}/watchdogs`
-    const opt = {
-      ...this.options,
-      method: 'POST',
-      body: JSON.stringify(watchdogData)
-    }
-    return fetch(resource, opt)
-            .then(response => {
-              if (response.ok) {
-                return response.json() // success
-              } else {
-                return new Promise((resolve, reject) => {
-                  response.json()
-                    .then(error => {
-                      reject(error.data)
-                    })
-                    .catch(error => {
-                      reject(error.data)
-                    })
-                })
-              }
-            })
-            .catch(error => {
-              return new Promise((resolve, reject) => {
-                reject(error)
-              })
-            })
-  },
-
-  // fetch basic stats (for home page) from API server
-  getStats: function () {
-    const resource = `${backendRoot}/${constants.urlAuthOnly}/stats`
-    const opt = this.options
-    return fetch(resource, opt)
-            .then(response => {
-              if (!response.ok) {
-                return new Promise((resolve, reject) => {
-                  reject()
-                })
-              }
-              return response.json().then(jsonResponse => {
-                return jsonResponse
-              })
-            })
-            .catch(error => {
-              return new Promise((resolve, reject) => {
-                reject('Server error')
-              })
-            })
-  },
-
-  // get app's parameters
-  getParams: function () {
-    const resource = `${backendRoot}/${constants.urlAuthOnly}/parameters`
-    const opt = this.options
-    return fetch(resource, opt)
-            .then(response => {
-              if (!response.ok) {
-                return new Promise((resolve, reject) => {
-                  reject()
-                })
-              }
-              return response.json().then(jsonResponse => {
-                return jsonResponse
-              })
-            })
-            .catch(error => {
-              console.log(error)
-            })
-  },
-
-  // update app's parameters
-  updateParams: function (params) {
-    const resource = `${backendRoot}/${constants.urlAuthOnly}/parameters`
-    const opt = {
-      ...this.options,
-      method: 'PUT',
-      body: JSON.stringify(params)
-    }
-    return fetch(resource, opt)
-            .then(response => {
-              if (response.ok) {
-                return response.json() // success
-              } else {
-                return new Promise((resolve, reject) => {
-                  response.json()
-                    .then(error => {
-                      reject(error.data)
-                    })
-                    .catch(error => {
-                      reject(error.data)
-                    })
-                })
-              }
-            })
-            .catch(error => {
-              return new Promise((resolve, reject) => {
-                reject(error)
-              })
-            })
-  },
-
-  // get app's self logs
-  getSelfLogs: function () {
-    const resource = `${backendRoot}/${constants.urlAuthOnly}/selflogs`
-    const opt = this.options
-    return fetch(resource, opt)
-            .then(response => {
-              if (!response.ok) {
-                return new Promise((resolve, reject) => {
-                  reject()
-                })
-              }
-              return response.json().then(jsonResponse => {
-                return jsonResponse
-              })
-            })
-            .catch(error => {
-              console.log(error)
-            })
-  },
-
-  // get app's logs
-  getLogs: function (queryString) {
-    const resource = `${backendRoot}/${constants.urlAuthOnly}/logs${queryString}`
-    const opt = this.options
-    return fetch(resource, opt)
-            .then(response => {
-              if (response.ok) {
-                return response.json() // success
-              } else {
-                return new Promise((resolve, reject) => {
-                  response.json()
-                    .then(error => {
-                      reject(error.data)
-                    })
-                    .catch(error => {
-                      reject(error.data)
-                    })
-                })
-              }
-            })
-            .catch(error => {
-              return new Promise((resolve, reject) => {
-                reject(error)
-              })
-            })
+// generic part of fetch() "options" argument
+let options = {
+  credentials: 'include',
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
   }
+}
+
+// checking authentication
+export function isAuthenticated() {
+  const resource = `${baseUrl}/${restrictedPath}/authenticate`
+  return fetch(resource, options)
+    .then(response => {
+      return response.json()
+    })
+    .catch(error => {
+      console.log(error)
+    })
+}
+
+// create new account
+export function register(answer) {
+  const resource = `${baseUrl}/register?answer=${answer}`
+  return fetch(resource, options)
+    .then(response => {
+      return response.json() // returning promise that resolves to JSON object
+        .then(jsonResponse => {
+          return new Promise((resolve, reject) => {
+            resolve(
+              {
+                authenticated: response.ok, // login status (if login was successful or not)
+                message: jsonResponse.message, // status message for user
+                uuid: jsonResponse.uuid, // uuid of new user
+                password: jsonResponse.password, // plaintext password of new user
+                time: jsonResponse.time
+              }
+            )
+          })
+        })
+    })
+    .catch(error => {
+      return new Promise((resolve, reject) => {
+        reject({
+          authenticated: false,
+          message: serErr
+        })
+      })
+    })
+}
+
+// user login
+export function login(password) {
+  const resource = `${baseUrl}/login`
+  const body = JSON.stringify({
+    password: password
+  })
+  const opt = {
+    ...options,
+    method: 'POST',
+    body: body
+  }
+  return fetch(resource, opt)
+    .then(response => {
+      return response.json() // returning promise that resolves to JSON object
+        .then(jsonResponse => {
+          return new Promise((resolve, reject) => {
+            resolve(
+              {
+                authenticated: response.ok, // login status (if login was successful or not)
+                uuid: jsonResponse.uuid, // uuid of logged in user
+                message: jsonResponse.message, // status message for user
+                time: jsonResponse.time
+              }
+            )
+          })
+        })
+    })
+    .catch(error => {
+      return new Promise((resolve, reject) => {
+        reject(error)
+      })
+    })
 
 }
 
-export default fetchAPI
+// user logout
+export function logout() {
+  const resource = `${baseUrl}/${restrictedPath}/logout`
+  const opt = {
+    ...options,
+    method: 'POST'
+  }
+  return fetch(resource, opt)
+    .then(response => {
+      if (response.ok) {
+        return response.json()
+      } else {
+        return new Promise((resolve, reject) => {
+          response.json()
+            .then(error => {
+              reject(error.data)
+            })
+            .catch(error => {
+              reject(error.data)
+            })
+        })
+      }
+    })
+    .catch(error => {
+      return new Promise((resolve, reject) => {
+        reject(error)
+      })
+    })
+}
+
+// fetch "Watchdog" items
+export function getWatchdogs() {
+  const resource = `${baseUrl}/${restrictedPath}/watchdogs`
+  return fetch(resource, options)
+    .then(response => {
+      if (response.ok) {
+        return response.json()
+      } else {
+        return new Promise((resolve, reject) => {
+          response.json()
+            .then(error => {
+              reject(error.data)
+            })
+            .catch(error => {
+              reject(error.data)
+            })
+        })
+      }
+    })
+    .catch(error => {
+      return new Promise((resolve, reject) => {
+        reject(error)
+      })
+    })
+}
+
+// fetch single "Watchdog" item
+export function getWatchdog(id) {
+  const resource = `${baseUrl}/${restrictedPath}/watchdogs/${id}`
+  return fetch(resource, options)
+    .then(response => {
+      if (response.ok) {
+        return response.json()
+      } else {
+        return new Promise((resolve, reject) => {
+          response.json()
+            .then(error => {
+              reject(error.data)
+            })
+            .catch(error => {
+              reject(error.data)
+            })
+        })
+      }
+    })
+    .catch(error => {
+      return new Promise((resolve, reject) => {
+        reject(error)
+      })
+    })
+}
+
+// update "Watchdog" item
+export function updateWatchdog(id, watchdogData) {
+  const resource = `${baseUrl}/${restrictedPath}/watchdogs/${id}`
+  const opt = {
+    ...options,
+    method: 'PUT',
+    body: JSON.stringify(watchdogData)
+  }
+  return fetch(resource, opt)
+    .then(response => {
+      if (response.ok) {
+        return response.json()
+      } else {
+        return new Promise((resolve, reject) => {
+          response.json()
+            .then(error => {
+              reject(error.data)
+            })
+            .catch(error => {
+              reject(error.data)
+            })
+        })
+      }
+    })
+    .catch(error => {
+      return new Promise((resolve, reject) => {
+        reject(error)
+      })
+    })
+}
+
+// delete "Watchdog" item
+export function deleteWatchdog(id) {
+  const resource = `${baseUrl}/${restrictedPath}/watchdogs/${id}`
+  const opt = {
+    ...options,
+    method: 'DELETE'
+  }
+
+  return fetch(resource, opt)
+    .then(response => {
+      return new Promise((resolve, reject) => {
+        if (response.status === 204) {
+          resolve('Watchdog deleted successfully')
+        } else {
+          reject(serErr)
+        }
+      })
+    })
+    .catch(error => {
+      return new Promise((resolve, reject) => {
+        reject(error)
+      })
+    })
+}
+
+// add "Watchdog" item
+export function addWatchdog(watchdogData) {
+  const resource = `${baseUrl}/${restrictedPath}/watchdogs`
+  const opt = {
+    ...options,
+    method: 'POST',
+    body: JSON.stringify(watchdogData)
+  }
+  return fetch(resource, opt)
+    .then(response => {
+      if (response.ok) {
+        return response.json()
+      } else {
+        return new Promise((resolve, reject) => {
+          response.json()
+            .then(error => {
+              reject(error.data)
+            })
+            .catch(error => {
+              reject(error.data)
+            })
+        })
+      }
+    })
+    .catch(error => {
+      return new Promise((resolve, reject) => {
+        reject(error)
+      })
+    })
+}
+
+// fetch basic stats (for home page) from API server
+export function getStats() {
+  const resource = `${baseUrl}/${restrictedPath}/stats`
+  return fetch(resource, options)
+    .then(response => {
+      if (response.ok) {
+        return response.json()
+      } else {
+        return new Promise((resolve, reject) => {
+          response.json()
+            .then(error => {
+              reject(error.data)
+            })
+            .catch(error => {
+              reject(error.data)
+            })
+        })
+      }
+    })
+    .catch(error => {
+      return new Promise((resolve, reject) => {
+        reject(error)
+      })
+    })
+}
+
+// get users's settings
+export function getSettings() {
+  const resource = `${baseUrl}/${restrictedPath}/settings`
+  return fetch(resource, options)
+    .then(response => {
+      if (response.ok) {
+        return response.json()
+      } else {
+        return new Promise((resolve, reject) => {
+          response.json()
+            .then(error => {
+              reject(error.data)
+            })
+            .catch(error => {
+              reject(error.data)
+            })
+        })
+      }
+    })
+    .catch(error => {
+      return new Promise((resolve, reject) => {
+        reject(error)
+      })
+    })
+}
+
+// update user's settings
+export function updateSettings(settings) {
+  const resource = `${baseUrl}/${restrictedPath}/settings`
+  const opt = {
+    ...options,
+    method: 'PUT',
+    body: JSON.stringify(settings)
+  }
+  return fetch(resource, opt)
+    .then(response => {
+      if (response.ok) {
+        return response.json()
+      } else {
+        return new Promise((resolve, reject) => {
+          response.json()
+            .then(error => {
+              reject(error.data)
+            })
+            .catch(error => {
+              reject(error.data)
+            })
+        })
+      }
+    })
+    .catch(error => {
+      return new Promise((resolve, reject) => {
+        reject(error)
+      })
+    })
+}
+
+// get app's self logs
+export function getSelfLogs() {
+  const resource = `${baseUrl}/${restrictedPath}/selflogs`
+  return fetch(resource, options)
+    .then(response => {
+      if (response.ok) {
+        return response.json()
+      } else {
+        return new Promise((resolve, reject) => {
+          response.json()
+            .then(error => {
+              reject(error.data)
+            })
+            .catch(error => {
+              reject(error.data)
+            })
+        })
+      }
+    })
+    .catch(error => {
+      return new Promise((resolve, reject) => {
+        reject(error)
+      })
+    })
+}
+
+// get app's logs
+export function getLogs(queryString) {
+  const resource = `${baseUrl}/${restrictedPath}/logs${queryString}`
+  return fetch(resource, options)
+    .then(response => {
+      if (response.ok) {
+        return response.json()
+      } else {
+        return new Promise((resolve, reject) => {
+          response.json()
+            .then(error => {
+              reject(error.data)
+            })
+            .catch(error => {
+              reject()
+            })
+        })
+      }
+    })
+    .catch(error => {
+      return new Promise((resolve, reject) => {
+        reject(error)
+      })
+    })
+}

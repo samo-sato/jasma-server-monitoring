@@ -1,12 +1,7 @@
-import { constants } from './constants'
+import { urlBaseWithPort, snoozePath } from './globals.js'
 
-// API server endpoint root
-const backendRoot = window.location.protocol + '//' + window.location.hostname + ':' + constants.backendPort
-
-// file with general frontend functions
-
-// methods for making given html button disabled or enabled
-// button is referenced by react ref ("useRef" hook)
+// enables or disables html element (usually <button>)
+// button is referenced using "useRef" React hook
 export const elementToggle = {
 
   // disables given html element by ref
@@ -31,38 +26,42 @@ export const elementToggle = {
 
 }
 
-// generate JSX textual message(s) for the user
-// used with react state, in order to generate error, or other status messages for the user
+// returns JSX formated message(s)
+// used with react state, in order to generate status messages for the user
   // arguments:
   // "messages" => string or arrays of strings
   // "className" => css class used to style given message(s)
-export function generateStatusMsg (messages, className) {
+export function generateStatusMsg(messages, className) {
 
-  const msgs = typeof messages === 'string' ? [messages] : (
-    typeof messages === 'object' ? (
-      Array.isArray(messages) ? messages : []
-    ) : []
-  )
+  let msgs
+  if (typeof messages === 'string') { // likely single message
+    msgs = [messages]
+  } else if (Array.isArray(messages)) { // likely array of messages
+    msgs = messages
+  } else if (typeof messages === 'object') { // likely JSX component with message
+    return messages
+  } else {
+    msgs = ['Error']
+  }
 
   const cl = typeof className === 'string' ? className : null
 
+  let display = msgs.length === 1 ? 'inline' : 'block'
   let result = []
   msgs.forEach((msg, index) => {
-    result.push(<p key={index} className={cl}>{msg}</p>)
+    result.push(<div style={{display:display}} key={index} className={cl}>{msg}</div>)
   })
 
   return (<>{result}</>)
 }
 
-
 // returns JSX element with help icon
 // element shows text with help on mouse hover
 export function generateHelp(text) {
-  return <span className="help" title={text}>(&nbsp;?&nbsp;)</span>
+  return <span className="help" title={text}>( ? )</span>
 }
 
-
-// returns snooze url endpoint for passive watchdogs based in their "privateId"
-export function generateSnoozeUrl(privateId) {
-  return `${backendRoot}/${constants.urlPassiveMode}/${privateId}`
+// returns snooze url endpoint for passive watchdogs based on watchdog ID (wid)
+export function generateSnoozeUrl(wid) {
+  return `${urlBaseWithPort(process.env.REACT_APP_PUBLIC_PORT_API, true)}/${snoozePath}?wid=${wid}`
 }

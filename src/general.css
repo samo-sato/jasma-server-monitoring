@@ -1,8 +1,13 @@
-/*
-color scheme:
-Light: https://colorhunt.co/palette/6e85b7b2c8dfc4d7e0f8f9d7
-Dark: https://colorhunt.co/palette/2c3333395b64a5c9cae7f6f2
-*/
+/* CSS variables */
+:root {
+  --radius: 6px;
+  --light0: #C4D7E0;
+  --light1: #6E85B7;
+  --light2: #F8F9D7;
+  --dark0: #2C3333;
+  --dark1: #E7F6F2;
+  --dark2: #395B64;
+}
 
 .App {
   font-family: "Ubuntu", sans-serif;
@@ -16,10 +21,22 @@ body {
   margin: 0px;
 }
 
+.light {
+  background-color: var(--light0);
+}
+
+.dark {
+  background-color: var(--dark0);
+}
+
 .mainHeading {
   font-size: 1.5em;
   padding: 0px;
   margin: 10px 0px 0px 50px;
+}
+
+.mainHref {
+  text-decoration: none;
 }
 
 .delimiter {
@@ -29,12 +46,20 @@ body {
 
 /* light mode */
 #light {
-  color: #6E85B7;
+  color: var(--light1);
 }
 
 /* dark mode */
 #dark {
-  color: #E7F6F2;
+  color: var(--dark1);
+}
+
+#light a {
+  color: var(--light1);
+}
+
+#dark a {
+  color: var(--dark1);
 }
 
 header {
@@ -42,13 +67,13 @@ header {
 }
 
 #light header {
-  background-color: #F8F9D7;
-  border-bottom: 1px solid #6E85B7;
+  background-color: var(--light2);
+  border-bottom: 1px solid var(--light1);
 }
 
 #dark header {
-  background-color: #395B64;
-  border-bottom: 1px solid #E7F6F2;
+  background-color: var(--dark2);
+  border-bottom: 1px solid var(--dark1);
 }
 
 header li {
@@ -58,7 +83,7 @@ header li {
 
 /* status messages */
 .bad {
-  color: red;
+  color: #ff6767;
 }
 
 /* status messages */
@@ -76,11 +101,11 @@ nav {
 }
 
 #light .navlink {
-  color: #6E85B7;
+  color: var(--light1);
 }
 
 #dark .navlink {
-  color: #E7F6F2;
+  color: var(--dark1);
 }
 
 .navlinkUnselected {
@@ -122,19 +147,19 @@ nav {
 
 article {
   max-width: 900px;
-  border-radius: 4px;
+  border-radius: var(--radius);
   margin: 40px auto;
   padding: 10px;
 }
 
 #light article {
-  border: 1px solid #6E85B7;
-  background-color: #F8F9D7;
+  border: 1px solid var(--light1);
+  background-color: var(--light2);
 }
 
 #dark article {
-  border: 1px solid #E7F6F2;
-  background-color: #395B64;
+  border: 1px solid var(--dark1);
+  background-color: var(--dark2);
 }
 
 article table {
@@ -146,11 +171,11 @@ article table button {
 }
 
 #light article table a {
-  color: #6E85B7;
+  color: var(--light1);
 }
 
 #dark article table a {
-  color: #E7F6F2;
+  color: var(--dark1);
 }
 
 article table thead {
@@ -158,13 +183,13 @@ article table thead {
 }
 
 #light article table thead {
-  color: #6E85B7;
-  background-color: #C4D7E0;
+  color: var(--light1);
+  background-color: var(--light0);
 }
 
 #dark article table thead {
-  color: #2C3333;
-  background-color: #E7F6F2;
+  color: var(--dark0);
+  background-color: var(--dark1);
 }
 
 article table tfoot {
@@ -172,13 +197,13 @@ article table tfoot {
 }
 
 #light article table tfoot {
-  color: #6E85B7;
-  background-color: #C4D7E0;
+  color: var(--light1);
+  background-color: var(--light0);
 }
 
 #dark article table tfoot {
-  color: #2C3333;
-  background-color: #E7F6F2;
+  color: var(--dark0);
+  background-color: var(--dark1);
 }
 
 select, button {
@@ -189,17 +214,21 @@ article select {
   padding: 0.5em;
 }
 
+.copyButton {
+  cursor: copy;
+}
+
 article .textInput {
   padding: 8px;
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 
 #light article .textInput {
-  border: 1px solid #6E85B7;
+  border: 1px solid var(--light1);
 }
 
 #dark article .textInput {
-  border: 1px solid #E7F6F2;
+  border: 1px solid var(--dark1);
 }
 
 .sameLine {
@@ -210,21 +239,24 @@ article .textInput {
 
 .cautionBtn {
   border: 3px solid red;
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 
 .okBtn {
   border: 3px solid #00cd09;
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 
 .floatBlock {
   float:left;
 }
 
-.sideMargin {
-  margin-left: 5px;
+.marginRight {
   margin-right: 5px;
+}
+
+.marginLeft {
+  margin-left: 5px;
 }
 
 .help {
@@ -232,7 +264,28 @@ article .textInput {
   margin-right: 5px;
   padding: 1px;
   font-weight: bold;
-  cursor: default;
+  cursor: help;
+}
+
+.centerDiv {
+  width: 300px;
+  font-size: 2em;
+  background: white;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px;
+  opacity: 0.5;
+  border-radius: var(--radius);
+}
+
+.logTable {
+  background-color:rgba(0, 255, 0, 0.1);
+}
+
+.logTable td {
+  padding: 5px;
 }
 
 .clearfix {

@@ -1,7 +1,7 @@
-// menu component with menu items
-// which menu items are shown depends if user is logged in or not
+// this is component with main menu
+// menu items are conditionally generated
 
-import { pages } from '../App' // data about webapp pages used to generate apropriate menu
+import { pages } from '../App.js' // data about web pages used to generate apropriate menu items
 import { NavLink } from 'react-router-dom'
 
 function Menu(props) {
@@ -29,9 +29,9 @@ function Menu(props) {
           </li>
         )
 
-        if (props.authorized && val.auth) { // building menu for logged in user
+        if (props.authenticated && val.auth) { // building menu for logged in user
             result.push(mItem)
-        } else if (!props.authorized && !val.auth) { // building menu for logged out user
+        } else if (!props.authenticated && !val.auth) { // building menu for logged out user
           result.push(mItem)
         }
 

@@ -1,18 +1,15 @@
 import { useEffect, useRef } from 'react'
 import { useState } from 'react'
-import fetchAPI from '../../../fetchAPI'
-import { generateStatusMsg, elementToggle } from '../../../functions'
+import LoadingIndicator from '../../LoadingIndicator.js'
+import { getWatchdogs, getLogs } from '../../../fetchAPI.js'
+import { generateStatusMsg, elementToggle } from '../../../functions.js'
 
 function Logs() {
 
-  // useEffect ran twice workaround
-  const effectRan = useRef(false)
-
   // react "useState" hook
-  const [watchdogCheckboxes, setWatchdogCheckboxes] = useState(<p>Loading watchdogs...</p>)
-  const [statusMsg, setStatusMsg] = useState(null)
+  const [watchdogCheckboxes, setWatchdogCheckboxes] = useState(<LoadingIndicator text="Loading items" />)
+  const [statusMsg, setStatusMsg] = useState('')
   const [logTable, setLogTable] = useState(generateLogTable(null))
-  const [searchBtnText, setSearchBtnText] = useState('Loading...')
 
   // react "useRef" hook
   const inputs = {} // using it to get data from input fields
@@ -22,43 +19,25 @@ function Logs() {
   inputs.status1 = useRef(null)
   const btnSave = useRef(null) // save button ref
 
-  // default text for search button
-  const defaultBtnText = 'Search'
-
   useEffect(() => {
-    if (effectRan.current === false) { // useEffect ran twice workaround
-      elementToggle.disable(btnSave)
-      fetchAPI.getWatchdogs()
-        .then(response => {
-          let watchdogCheckboxes = []
-          response.forEach((watchdog, index) => {
-            watchdogCheckboxes.push(
-              <div key={index}>
-                <input type="checkbox" id={`wc${index}`} value={watchdog.id} className="wc" defaultChecked={true} />
-                <label htmlFor={`wc${index}`}>{watchdog.name}</label>
-              </div>
-            )
-          })
-          setWatchdogCheckboxes(watchdogCheckboxes)
-          elementToggle.enable(btnSave)
-          setSearchBtnText(defaultBtnText)
+    elementToggle.disable(btnSave)
+    getWatchdogs()
+      .then(response => {
+        let watchdogCheckboxes = []
+        response.forEach((watchdog, index) => {
+          watchdogCheckboxes.push(
+            <div key={index}>
+              <input type="checkbox" id={`wc${index}`} value={watchdog.id} className="wc" defaultChecked={true} />
+              <label htmlFor={`wc${index}`}>{watchdog.name}</label>
+            </div>
+          )
         })
-        .catch(error => {console.log(error)})
-
-      // useEffect ran twice workaround
-      return () => {
-        effectRan.current = true
-      }
-    }
+        setWatchdogCheckboxes(watchdogCheckboxes)
+        elementToggle.enable(btnSave)
+      })
+      .catch(error => {console.log(error)})
 
   }, [])
-
-  function shorten(string) {
-    let newLength = 25
-    let dots = string.length > newLength ? '[...]' : ''
-    let shortened = `${string.slice(0, newLength)}${dots}`
-    return <span title={string}>{shortened}</span>
-  }
 
   function generateLogTable(data) {
     if (data) {
@@ -68,11 +47,10 @@ function Logs() {
         let cName = row.status === 1 ? 'good' : (row.status === 0 ? 'bad' : '') // rows with "good" status will be different style than rows with "bad" status
         rows.push(
           <tr key={index} className={cName}>
-            <td>{row.id}</td>
             <td>{row.datetime}</td>
             <td>{row.watchdog}</td>
             <td>{row.status}</td>
-            <td>{shorten(row.note)}</td>
+            <td>{row.note}</td>
           </tr>
         )
       })
@@ -83,14 +61,13 @@ function Logs() {
           <table>
             <thead>
               <tr>
-                <td>Log ID</td>
-                <td>Date</td>
+                <td>Datetime</td>
                 <td>Watchdog</td>
                 <td>Status</td>
-                <td>Note</td>
+                <td style={{width:'45%'}}>Note</td>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="logTable">
               { rows }
             </tbody>
           </table>
@@ -104,8 +81,7 @@ function Logs() {
   function handleSearch() {
 
     elementToggle.disable(btnSave)
-    setSearchBtnText('Searching...')
-
+    setStatusMsg(<LoadingIndicator text="Loading logs" />)
     // collecting user input data from input fields
     // and converting it to query string that will be used in API GET request
     let queryString = ''
@@ -139,17 +115,15 @@ function Logs() {
         queryString += `&watchdogs=${list}`
 
       // initiating API call
-      fetchAPI.getLogs(queryString)
+      getLogs(queryString)
         .then(response => {
-          setStatusMsg(generateStatusMsg(`${response.count} logs found...`, 'good'))
+          setStatusMsg(generateStatusMsg(`${response.count} logs found...`, 'good', true))
           setLogTable(generateLogTable(response.data))
-          setSearchBtnText(defaultBtnText)
           elementToggle.enable(btnSave)
         })
         .catch(error => {
           let err = error ? error : 'Server error'
-          setStatusMsg(generateStatusMsg(err, 'bad'))
-          setSearchBtnText(defaultBtnText)
+          setStatusMsg(generateStatusMsg(err, 'bad', true))
           elementToggle.enable(btnSave)
         })
 
@@ -177,7 +151,6 @@ function Logs() {
   return (
     <article>
       <h1>Logs</h1>
-
       <label htmlFor="fromDate">From </label>
       <input type="date" id="fromDate" ref={inputs.dFrom} defaultValue={getToday()} className="textInput" />
       <label htmlFor="toDate"> to </label>
@@ -195,22 +168,22 @@ function Logs() {
       <label htmlFor="cStatus1">"1" online</label>
 
       <p>Watchdog association: </p>
-      <>
         <div>
           <input type="checkbox" id="wcsa" defaultChecked={true} onClick={selectAll} />
           <label htmlFor="wcsa">select/unselect all</label>
         </div>
-        <br />
+        <div className="sameLine">
           { watchdogCheckboxes }
-      </>
-
+        </div>
       <br />
-
-      <button onClick={handleSearch} ref={btnSave}>{searchBtnText}</button>
-
-      { statusMsg }
-      { logTable }
-
+      <button onClick={handleSearch} ref={btnSave}>Search logs</button>
+      <span className="marginLeft">
+        { statusMsg }
+      </span>
+      <br />
+      <div>
+        { logTable }
+      </div>
     </article>
   )
 }

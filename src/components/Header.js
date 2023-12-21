@@ -1,13 +1,15 @@
-// header component containing webapp main title, menu and theme settings (dark/light/auto mode) 
-
-import Menu from './Menu'
-import ThemeSetting from './ThemeSetting'
+// this is header component containing main title, menu items and theme toggle button component (dark/light/auto)
+import { urlBaseWithPort } from '../globals.js'
+import Menu from './Menu.js'
+import ThemeSetting from './ThemeSetting.js'
 
 function Header(props) {
   return (
     <header>
-      <h1 className="mainHeading">JASMA - just a server monitoring app</h1>
-      <Menu authorized={props.authorized} />
+      <a href={urlBaseWithPort(process.env.REACT_APP_PUBLIC_PORT_WEB, false)} className="mainHref">
+        <h1 className="mainHeading">JASMA - Just Another Server Monitoring App</h1>
+      </a>
+      <Menu authenticated={props.authenticated} />
       <ThemeSetting themeProps={props.themeProps}/>
       <div className="clearfix">
       </div>

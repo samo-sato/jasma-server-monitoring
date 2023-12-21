@@ -1,4 +1,4 @@
-// menu with controls to set theme (dark/light/auto mode)
+// this component contains button used to toggle between different themes (dark/light/auto mode)
 
 function ThemeSetting(props) {
 
