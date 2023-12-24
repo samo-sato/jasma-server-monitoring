@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import List from './List.js'
 import LoadingIndicator from '../../LoadingIndicator.js'
-import { PARSE_INT_BASE, msToWords } from '../../../globals.js'
+import { PARSE_INT_BASE, msToWords, refreshDelayShort, autorefreshNote, serErr } from '../../../globals.js'
 import { generateStatusMsg } from '../../../functions.js'
 import { getWatchdogs } from '../../../fetchAPI.js'
 
@@ -19,6 +19,7 @@ function Watchdogs() {
   // react "useState" hook
   const [watchdogsData, setWatchdogsData] = useState(null)
   const [message, setMessage] = useState(null)
+  const [fetchError, setFetchError] = useState(false)
 
   // react "useNavigate" hook
   const navigate = useNavigate()
@@ -26,16 +27,32 @@ function Watchdogs() {
   // react "useLocation" hook
   const location = useLocation()
 
-  useEffect(() => {
-      getWatchdogs()
-        .then(response => {
-          setWatchdogsData(response)
-        })
-        .catch(error => {console.log(error)})
+  const fetchWatchdogs = () => {
+    getWatchdogs()
+      .then(response => {
+        setWatchdogsData(response)
+      })
+      .catch(error => {
+        setFetchError(true)}
+      )
+  }
 
-      if (location.state) {
-        setMessage(generateStatusMsg(location.state.message, 'good'))
-      }
+  useEffect(() => {
+
+    fetchWatchdogs()
+
+    // using setInterval to achieve autorefresh of fetched data
+    const intervalId = setInterval(() => {
+      fetchWatchdogs()
+    }, refreshDelayShort)
+
+    if (location.state) {
+      setMessage(generateStatusMsg(location.state.message, 'good'))
+    }
+
+    return () => {
+      clearInterval(intervalId)
+    }
 
   }, [])
 
@@ -43,16 +60,17 @@ function Watchdogs() {
     navigate('/add-watchdog')
   }
 
-  if (watchdogsData) {
+  if (fetchError) {
+    <p>{ serErr }</p>
+  } else if (watchdogsData) {
     return (
       <article>
         <h1>Watchdogs</h1>
-        <p><i>Refresh this page to update data</i></p>
         <List watchdogs={watchdogsData} />
         <div>
           {message}
         </div>
-        <br />
+        <p><i>{ autorefreshNote }</i></p>
         <button onClick={handleAdd}>Add new Watchdog</button>
       </article>
     )

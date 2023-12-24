@@ -2,6 +2,9 @@
 // import dotenv from 'dotenv'
 // dotenv.config()
 
+// generic error message related to server issues
+export const serErr = 'Server error, please try later'
+
 // used in parseInt functions, numeral system
 export const PARSE_INT_BASE = 10
 
@@ -10,6 +13,11 @@ export const widLength = 30
 export const apiPathName = 'api'
 export const restrictedPath = 'private'
 export const snoozePath = 'snooze'
+
+// autorefresh timing vairables
+export const refreshDelayShort = 1000 // milliseconds - used in setInterval
+export const refreshDelayLong = 15000 // milliseconds - used in setInterval
+export const autorefreshNote = 'Data on this page are updated automatically'
 
 // takes number of milliseconds and returns aprox. string description of that time length
 // eg. 5421 => "5 seconds"

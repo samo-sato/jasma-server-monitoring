@@ -15,7 +15,7 @@ import Settings from './components/content/Settings/Settings.js'
 import New from './components/content/New/New.js'
 import NoPage from './components/NoPage.js'
 import LoadingIndicator from './components/LoadingIndicator.js'
-import { PARSE_INT_BASE } from './globals.js'
+import { PARSE_INT_BASE, refreshDelayLong, serErr } from './globals.js'
 import { isAuthenticated } from './fetchAPI.js'
 import { generateStatusMsg } from './functions.js'
 import './general.css'
@@ -188,43 +188,46 @@ function App() {
 
   }
 
-  useEffect(() => {
-
-    // set theme from based on cookie (if exists)
-    setThemeByMode(cookies.themeMode)
-
-    // determines if user is logged in
+  const fetchAuthStatus = () => {
     isAuthenticated()
       .then(response => {
-
         if (response.authenticated) {
-
-          console.log('Authenticated')
           setAuthenticated(response.uuid)
           setServerTime(response.time)
-
         } else {
-
           if (response.rateLimited) {
-
             setRateLimited(response.message)
-
           } else {
-            const msg = response.message ? response.message : 'Authentication failed'
+            const msg = response.message ? response.message : 'Not authorized'
             console.log(msg)
             setAuthenticated(false)
             setServerTime(false)
 
           }
         }
-
       })
       .catch(error => { // user is not logged in
-
         setAuthenticated(false)
         setServerTime(error.time)
-
       })
+  }
+
+  useEffect(() => {
+
+    fetchAuthStatus()
+
+    let intervalId
+    if (authenticated) {
+
+      // using setInterval to achieve autorefresh of fetched data
+      intervalId = setInterval(() => {
+        fetchAuthStatus()
+      }, refreshDelayLong)
+
+    }
+
+    // set theme from based on cookie (if exists)
+    setThemeByMode(cookies.themeMode)
 
     // set html title
     const rootTitle = 'JASMA Server Monitoring'
@@ -236,6 +239,10 @@ function App() {
       document.title = `${subTitle}${separator}${rootTitle}`
     } else {
       document.title = rootTitle
+    }
+
+    return () => {
+      clearInterval(intervalId)
     }
 
   }, [location.pathname])

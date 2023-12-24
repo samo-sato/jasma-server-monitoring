@@ -42,7 +42,7 @@ app.use(express.urlencoded({ extended: true })) // for parsing application/x-www
 // rate limiter applied on all endpoints
 const rootLimiter = rateLimit({
   windowMs: 60 * 1000, // milli-seconds
-  max: 40, // limit each IP to max requests per windowMs
+  max: 100, // limit each IP to max requests per windowMs
   handler: (req, res, next, options) => {
     if (req.rateLimit.used === req.rateLimit.limit + 1) {
       logger.info(`Rate limit reached. IP address [${req.ip}]`)
