@@ -69,7 +69,7 @@ app.use('/', rootLimiter)
 const delayment = (req, res, next) => {
   setTimeout(() => {
     next()
-  }, 1000)
+  }, 100)
 }
 app.use('/', delayment)
 
@@ -158,7 +158,7 @@ baseRouter.get('/register', async (req, res) => {
   } else {
     try {
       const user = await handleDB.addUser()
-      const msg = `User [${uuid}] added to DB. IP [${req.ip}].`
+      const msg = `User [${user.data.uuid}] added to DB. IP [${req.ip}].`
       logger.info(msg)
       const loggedUser = await loginUser(user.data.uuid)
       const token = loggedUser.data
