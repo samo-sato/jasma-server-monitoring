@@ -13,7 +13,7 @@ import Logs from './components/content/Logs/Logs.js'
 import SelfLogs from './components/content/SelfLogs/SelfLogs.js'
 import Settings from './components/content/Settings/Settings.js'
 import New from './components/content/New/New.js'
-import NoPage from './components/NoPage.js'
+import NotFound from './components/content/NotFound/NotFound.js'
 import LoadingIndicator from './components/LoadingIndicator.js'
 import { PARSE_INT_BASE, refreshDelayLong, serErr } from './globals.js'
 import { isAuthenticated } from './fetchAPI.js'
@@ -60,7 +60,7 @@ const pages = [
     auth: true
   },
   {
-    slug: '404-no-page',
+    slug: 'not-found',
     name: 'No content here',
     menuItem: false,
     auth: false
@@ -96,7 +96,6 @@ function App() {
   const [themeStyle, setThemeStyle] = useState('light') // currently set theme style: light OR dark
   const [themeMode, setThemeMode] = useState('light') // currently selected theme mode: light OR dark OR auto
   const [authenticated, setAuthenticated] = useState(null) // if user is logged in, value is "uuid" of user, otherwise value is set to "null" or "false"
-  const [rateLimited, setRateLimited] = useState(null)
   const [serverTime, setServerTime] = useState(null) // informative server time
   const [pw, setPw] = useState(null)
 
@@ -195,15 +194,10 @@ function App() {
           setAuthenticated(response.uuid)
           setServerTime(response.time)
         } else {
-          if (response.rateLimited) {
-            setRateLimited(response.message)
-          } else {
-            const msg = response.message ? response.message : 'Not authorized'
-            console.log(msg)
-            setAuthenticated(false)
-            setServerTime(false)
-
-          }
+          const msg = response.message ? response.message : 'Not authorized'
+          console.log(msg)
+          setAuthenticated(false)
+          setServerTime(false)
         }
       })
       .catch(error => { // user is not logged in
@@ -268,15 +262,6 @@ function App() {
   }
 
   // displays loading indicator while fetching data
-  if (rateLimited) {
-    return (
-      <div className="centerDiv">
-        { generateStatusMsg(rateLimited, 'bad') }
-      </div>
-    )
-  }
-
-  // displays loading indicator while fetching data
   if (authenticated === null) {
     return (
       <div className="centerDiv">
@@ -306,7 +291,7 @@ function App() {
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/new" element={<New pw={pw} />} />
                 <Route path="/logout" element={<Logout onLogout={handleLogout} />} />
-                <Route path="*" element={<NoPage />} />
+                <Route path="*" element={<NotFound />} />
               </>
             ) : (
               // if user is NOT logged in

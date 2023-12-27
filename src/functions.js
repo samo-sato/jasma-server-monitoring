@@ -38,6 +38,8 @@ export function generateStatusMsg(messages, className) {
     msgs = [messages]
   } else if (Array.isArray(messages)) { // likely array of messages
     msgs = messages
+  } else if (messages instanceof Error) { // likely error object
+    msgs = [messages.message || 'Unknown error']
   } else if (typeof messages === 'object') { // likely JSX component with message
     return messages
   } else {

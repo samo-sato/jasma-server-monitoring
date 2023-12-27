@@ -172,9 +172,6 @@ export function addUser(data) {
         })
       } else { // User was added to DB
 
-        const msg = `User [${uuid}] added to DB`
-        logger.info(msg)
-
         // prepare data for new Watchdog
         const wid = generateWatchdogId()
         const data = {

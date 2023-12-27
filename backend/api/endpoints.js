@@ -34,32 +34,42 @@ app.use(cookieParser())
 import pkg from 'jsonwebtoken'
 const { verify: jwtVerify } = pkg
 
-const serErr = 'Server error' // generic error message
+// environment variable "trust proxy" flag to be set in Express
+let trustProxy = false
+if (process.env.JASMA_TRUST_PROXY.toLowerCase() === 'true') { trustProxy = true }
+
+// generic error message
+const serErr = 'Server error'
 
 app.use(express.json()) // for parsing application/json
 app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
+// Use middleware to trust the proxy's headers
+app.set('trust proxy', trustProxy)
+
 // rate limiter applied on all endpoints
 const rootLimiter = rateLimit({
-  windowMs: 60 * 1000, // milli-seconds
-  max: 100, // limit each IP to max requests per windowMs
+  windowMs: 60 * 1000, // milliseconds
+  max: 200, // limit each IP to max requests per windowMs
+  // max: 10, // limit for testing
   handler: (req, res, next, options) => {
-    if (req.rateLimit.used === req.rateLimit.limit + 1) {
-      logger.info(`Rate limit reached. IP address [${req.ip}]`)
-      res.status(429).send({
-        rateLimited: true,
-        message: 'Too Many Requests. Please try again later.'
-      })
+    if (req.rateLimit.used >= req.rateLimit.limit) {
+      setTimeout(() => {
+        logger.info(`Rate limit reached. Last detected IP address of the client [${req.ip}]`)
+        res.status(429).send({message: 'Too many requests'})
+      }, 2000)
     }
   }
 })
+
+// applies basic rate limiter on all endpoints
 app.use('/', rootLimiter)
 
 // adds delay for testing - remove before deployment
 const delayment = (req, res, next) => {
-//  setTimeout(() => {
+  setTimeout(() => {
     next()
-//  }, 1000)
+  }, 1000)
 }
 app.use('/', delayment)
 
@@ -75,9 +85,34 @@ let rootPath = `/${basePath}${apiPath}`
 
 app.use(rootPath , baseRouter)
 
+// test
+baseRouter.get('/test', (req, res) => {
+  console.log(req.ip)
+  res.status(200).send('ok')
+})
+
 // using "auth" router for endpoints with mandatory authentication
 const authRouter = express.Router()
 baseRouter.use(`/${restrictedPath}`, authenticate, authRouter)
+
+// rate limiter applied on specific endpoints requiring more strict request rate limiting
+const strictLimiter = rateLimit({
+  windowMs: 60 * 1000, // milliseconds
+  max: 6, // limit each IP to max requests per windowMs
+  // max: 10, // limit for testing
+  handler: (req, res, next, options) => {
+    if (req.rateLimit.used >= req.rateLimit.limit) {
+      setTimeout(() => {
+        logger.info(`Strict rate limit reached. Last detected IP address of the client [${req.ip}]`)
+        res.status(429).send({message: 'Too many requests'})
+      }, 1000)
+    }
+  }
+})
+
+// applies the strict rate limitter on specific endpoints
+baseRouter.use(['/login', '/register'], strictLimiter)
+authRouter.put('/settings', strictLimiter)
 
 // this API endpoint handles requests from services in "passive" mode
 // each hit of following endpoint with correct parameter will create temporary log with timestamp and id (stored in wide-scoped array variable "passiveLogs")
@@ -123,6 +158,8 @@ baseRouter.get('/register', async (req, res) => {
   } else {
     try {
       const user = await handleDB.addUser()
+      const msg = `User [${uuid}] added to DB. IP [${req.ip}].`
+      logger.info(msg)
       const loggedUser = await loginUser(user.data.uuid)
       const token = loggedUser.data
       saveTokenToCookie(token, res)
@@ -206,7 +243,7 @@ baseRouter.post('/login', async (req, res) => {
     // user is logged in
 
     // log information about successful login
-    logger.info(`User [${uuid}] logged in`)
+    logger.info(`User [${uuid}] logged in. IP [${req.ip}].`)
 
     // send back success response with uuid of User and current server time
     res.status(200).send({

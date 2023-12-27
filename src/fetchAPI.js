@@ -8,6 +8,15 @@ const baseUrl =  urlBaseWithPort(process.env.REACT_APP_PUBLIC_PORT_API, true)
 // generic unspecified server error message
 const serErr = 'Server error'
 
+// function handling returned status code of fetch call
+function handleStatusCode(code) {
+  if (code === 429) {
+    console.log(`Status code ${code} detected`)
+    window.alert('Too many requests, please return back later')
+    throw new Error('Too many requests')
+  }
+}
+
 // generic part of fetch() "options" argument
 let options = {
   credentials: 'include',
@@ -22,6 +31,7 @@ export function isAuthenticated() {
   const resource = `${baseUrl}/${restrictedPath}/authenticate`
   return fetch(resource, options)
     .then(response => {
+      handleStatusCode(response.status)
       return response.json()
     })
     .catch(error => {
@@ -34,6 +44,7 @@ export function register(answer) {
   const resource = `${baseUrl}/register?answer=${answer}`
   return fetch(resource, options)
     .then(response => {
+      handleStatusCode(response.status)
       return response.json() // returning promise that resolves to JSON object
         .then(jsonResponse => {
           return new Promise((resolve, reject) => {
@@ -72,6 +83,7 @@ export function login(password) {
   }
   return fetch(resource, opt)
     .then(response => {
+      handleStatusCode(response.status)
       return response.json() // returning promise that resolves to JSON object
         .then(jsonResponse => {
           return new Promise((resolve, reject) => {
@@ -103,6 +115,7 @@ export function logout() {
   }
   return fetch(resource, opt)
     .then(response => {
+      handleStatusCode(response.status)
       if (response.ok) {
         return response.json()
       } else {
@@ -129,6 +142,7 @@ export function getWatchdogs() {
   const resource = `${baseUrl}/${restrictedPath}/watchdogs`
   return fetch(resource, options)
     .then(response => {
+      handleStatusCode(response.status)
       if (response.ok) {
         return response.json()
       } else {
@@ -155,6 +169,7 @@ export function getWatchdog(id) {
   const resource = `${baseUrl}/${restrictedPath}/watchdogs/${id}`
   return fetch(resource, options)
     .then(response => {
+      handleStatusCode(response.status)
       if (response.ok) {
         return response.json()
       } else {
@@ -186,6 +201,7 @@ export function updateWatchdog(id, watchdogData) {
   }
   return fetch(resource, opt)
     .then(response => {
+      handleStatusCode(response.status)
       if (response.ok) {
         return response.json()
       } else {
@@ -217,6 +233,7 @@ export function deleteWatchdog(id) {
 
   return fetch(resource, opt)
     .then(response => {
+      handleStatusCode(response.status)
       return new Promise((resolve, reject) => {
         if (response.status === 204) {
           resolve('Watchdog deleted successfully')
@@ -242,6 +259,7 @@ export function addWatchdog(watchdogData) {
   }
   return fetch(resource, opt)
     .then(response => {
+      handleStatusCode(response.status)
       if (response.ok) {
         return response.json()
       } else {
@@ -268,6 +286,7 @@ export function getStats() {
   const resource = `${baseUrl}/${restrictedPath}/stats`
   return fetch(resource, options)
     .then(response => {
+      handleStatusCode(response.status)
       if (response.ok) {
         return response.json()
       } else {
@@ -294,6 +313,7 @@ export function getSettings() {
   const resource = `${baseUrl}/${restrictedPath}/settings`
   return fetch(resource, options)
     .then(response => {
+      handleStatusCode(response.status)
       if (response.ok) {
         return response.json()
       } else {
@@ -325,6 +345,7 @@ export function updateSettings(settings) {
   }
   return fetch(resource, opt)
     .then(response => {
+      handleStatusCode(response.status)
       if (response.ok) {
         return response.json()
       } else {
@@ -351,6 +372,7 @@ export function getSelfLogs() {
   const resource = `${baseUrl}/${restrictedPath}/selflogs`
   return fetch(resource, options)
     .then(response => {
+      handleStatusCode(response.status)
       if (response.ok) {
         return response.json()
       } else {
@@ -377,6 +399,7 @@ export function getLogs(queryString) {
   const resource = `${baseUrl}/${restrictedPath}/logs${queryString}`
   return fetch(resource, options)
     .then(response => {
+      handleStatusCode(response.status)
       if (response.ok) {
         return response.json()
       } else {
