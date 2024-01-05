@@ -1,4 +1,4 @@
-import { urlBaseWithPort, snoozePath } from './globals.js'
+import { urlBase, snoozePath } from './globals.js'
 
 // enables or disables html element (usually <button>)
 // button is referenced using "useRef" React hook
@@ -65,5 +65,5 @@ export function generateHelp(text) {
 
 // returns snooze url endpoint for passive watchdogs based on watchdog ID (wid)
 export function generateSnoozeUrl(wid) {
-  return `${urlBaseWithPort(process.env.REACT_APP_PUBLIC_PORT_API, true)}/${snoozePath}?wid=${wid}`
+  return `${urlBase(process.env.REACT_APP_PUBLIC_PORT_API, true)}/${snoozePath}?wid=${wid}`
 }

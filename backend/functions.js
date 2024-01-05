@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import nodemailer from 'nodemailer'
-import { generateRandomString, urlBaseWithPort, widLength } from '../src/globals.js'
+import { generateRandomString, urlBase, widLength } from '../src/globals.js'
 import { isNotUnsubscribed, isActivated } from './handleDB.js'
 import { activationEndpoint, activationParam, unsubscribeEndpoint, unsubscribeParam } from './constants.js'
 
@@ -38,7 +38,7 @@ export function generateActivationKeyUrl() {
 
   const key = generateRandomString(40)
 
-  const url = `${urlBaseWithPort(process.env.REACT_APP_PUBLIC_PORT_API, true)}/${activationEndpoint}?${activationParam}=${key}`
+  const url = `${urlBase(process.env.REACT_APP_PUBLIC_PORT_API, true)}/${activationEndpoint}?${activationParam}=${key}`
 
   return {
     key: key,
@@ -58,7 +58,7 @@ export function generateUnsubscribeKeyUrl(optionalKey) {
 
   const key = optionalKey ? optionalKey : generateRandomString(40)
 
-  const url = `${urlBaseWithPort(process.env.REACT_APP_PUBLIC_PORT_API, true)}/${unsubscribeEndpoint}?${unsubscribeParam}=${key}`
+  const url = `${urlBase(process.env.REACT_APP_PUBLIC_PORT_API, true)}/${unsubscribeEndpoint}?${unsubscribeParam}=${key}`
 
   return {
     key: key,
@@ -142,10 +142,10 @@ export function sendMail(recipient, subject, message, activation, newUnsubKey) {
       const footer = `
   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   Why this message?
-  We apologize if you did not intend to receive this automated email. It was sent from ${urlBaseWithPort(process.env.REACT_APP_PUBLIC_PORT_WEB, false)} because you (or someone else) once entered your email address into our web app to receive notifications from server monitoring.
+  We apologize if you did not intend to receive this automated email. It was sent from ${urlBase(process.env.REACT_APP_PUBLIC_PORT_WEB, false)} because you (or someone else) once entered your email address into our web app to receive notifications from server monitoring.
   How to unsubscribe:
   To permanently unsubscribe please click on the following link: ${linkToUnsub}
-  Thank you for using ${urlBaseWithPort(process.env.REACT_APP_PUBLIC_PORT_WEB, false)} for your server monitoring needs.`
+  Thank you for using ${urlBase(process.env.REACT_APP_PUBLIC_PORT_WEB, false)} for your server monitoring needs.`
 
       // prepare transport data settings for nodemailer
       const transportOptions = {}

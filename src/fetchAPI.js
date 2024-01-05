@@ -1,9 +1,9 @@
-import { urlBaseWithPort, restrictedPath } from './globals.js'
+import { urlBase, restrictedPath } from './globals.js'
 
 // this file handles all client-side API requests/responses
 
 // set base URL of public API server
-const baseUrl =  urlBaseWithPort(process.env.REACT_APP_PUBLIC_PORT_API, true)
+const baseUrl =  urlBase(process.env.REACT_APP_PUBLIC_PORT_API, true)
 
 // generic unspecified server error message
 const serErr = 'Server error'

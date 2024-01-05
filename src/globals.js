@@ -57,16 +57,17 @@ export function generateRandomString(length) {
 // returns URL base with optional port number, base path and API path sourced from environment variables
 // port number, base path and API path must not be an empty string in order to be included in returned url
 // examples of returned value:
-// "https://www.example.com"               in case REACT_APP_DOMAIN_URL="https://www.example.com"; envPort="";     REACT_APP_BASE_PATH="";     REACT_APP_API_PATH="";    api=false
-// "https://www.example.com:3001/shop/api" in case REACT_APP_DOMAIN_URL="https://www.example.com"; envPort="3001"; REACT_APP_BASE_PATH="shop"; REACT_APP_API_PATH="api"; api=true
-export function urlBaseWithPort(envPort, api) {
+// "https://www.example.com"               in case REACT_APP_DOMAIN="example.com"; envPort="";     REACT_APP_BASE_PATH="";     REACT_APP_API_PATH="";    api=false
+// "https://www.example.com:3001/shop/api" in case REACT_APP_DOMAIN="example.com"; envPort="3001"; REACT_APP_BASE_PATH="shop"; REACT_APP_API_PATH="api"; api=true
+export function urlBase(envPort, api) {
 
   // make "api" argument mandatory
   if (api !== true && api!== false) { throw new Error('Invalid function parameter') }
 
-  // domainURL should be always set to non empty string
-  const domainURL = process.env.REACT_APP_DOMAIN_URL
-  if (!domainURL || domainURL === '') {
+  const protocol = process.env.REACT_APP_SECURE.toLowerCase() === 'true' ? 'https://' : 'http://' // protocol used in url (http or https)
+  const subDomain = process.env.REACT_APP_SUBDOMAIN ? `${process.env.REACT_APP_SUBDOMAIN}.` : '' // if set, include subdomain in url, example for "www": "https://www.example.org"
+  const domain = process.env.REACT_APP_DOMAIN
+  if (!domain || domain === '') {
     const msg = 'Invalid domain url, check environment variables'
     throw new Error(msg)
   }
@@ -82,6 +83,6 @@ export function urlBaseWithPort(envPort, api) {
 
   // add forward slash to apiPath, in case apiPath is not empty string
   apiPath = apiPath && `/${apiPath}`
-  return `${domainURL}${port}${basePath}${apiPath}`
+  return `${protocol}${subDomain}${domain}${port}${basePath}${apiPath}`
 
 }

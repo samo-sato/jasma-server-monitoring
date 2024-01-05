@@ -134,7 +134,9 @@ function App() {
     }
 
     // preparing data for theme cookie
+    const secure = process.env.REACT_APP_SECURE.toLowerCase() === 'true' ? true : false
     const cookieOptions = {
+      secure: secure,
       sameSite: true,
       maxAge: 3600 * 24 * 30 * 1000
     }

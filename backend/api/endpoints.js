@@ -83,6 +83,9 @@ const basePath = process.env.REACT_APP_BASE_PATH
 const apiPath = basePath ? (apiPathName ? `/${apiPathName}` : '') : apiPathName
 let rootPath = `/${basePath}${apiPath}`
 
+// using secure connection true or false
+const secure = process.env.REACT_APP_SECURE.toLowerCase() === 'true' ? true : false
+
 app.use(rootPath , baseRouter)
 
 // test
@@ -277,7 +280,7 @@ authRouter.post('/logout', async (req, res) => {
     const cookieSettings = {
       httpOnly: true,
       sameSite: 'None',
-      secure: true,
+      secure: secure,
       expires: new Date(0)
     }
 
@@ -532,7 +535,7 @@ function saveTokenToCookie(token, res) {
   res.cookie('token', token, {
     httpOnly: true,
     sameSite: 'None',
-    secure: true
+    secure: secure
   })
 }
 
