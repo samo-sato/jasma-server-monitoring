@@ -753,7 +753,7 @@ export function getLogs(filter, uuid) {
         id_watchdog IN (${selectedWatchdogs.map(() => '?').join(', ')}) AND
         status IN (${selectedStatuses.map(() => '?').join(', ')}) AND
         timestamp BETWEEN $dateFrom AND $dateTo
-      ORDER BY timestamp
+      ORDER BY timestamp DESC
       ;`
 
     const params = [
