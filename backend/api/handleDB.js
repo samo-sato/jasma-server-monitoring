@@ -939,7 +939,7 @@ export function updateSettings(data, activationLinkSent, uuid) {
     const sql = `
     UPDATE User SET
       email = $email,
-      email_active = $emailActive
+      email_active = $emailActive,
       activation_key = CASE WHEN $newActivationKey THEN $activationKey ELSE activation_key END,
       unsubscribe_key = CASE WHEN $newUnsubscribeKey THEN $unsubscribeKey ELSE unsubscribe_key END
     WHERE
