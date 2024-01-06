@@ -475,7 +475,7 @@ authRouter.put('/settings', async (req, res) => {
         activationLinkSent = true
       }
 
-      const updated = await handleDB.updateSettings(data, req.uuid)
+      const updated = await handleDB.updateSettings(data, activationLinkSent, req.uuid)
       let msgs = []
       if (activationLinkSent) {
         const msg = `An activation link has been sent to ${data.email}. Please follow the email instructions to proceed.`
