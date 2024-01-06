@@ -116,6 +116,7 @@ export const validate = {
 
     if (email === '') { return [] }
 
+    // check email address format
     const validateEmail = (email) => {
       return String(email)
         .toLowerCase()
@@ -124,6 +125,10 @@ export const validate = {
         )
     }
 
+    // check if email address is in lower case
+    if (email !== email.toLowerCase()) { errors.push('Email must be in lower case') }
+
+    // check email address format
     if (!validateEmail(email)) { errors.push('Invalid email address') }
 
     return errors
