@@ -144,7 +144,7 @@ export function activateEmail(key) {
 }
 
 // add new user to DB (for demo account => master=0)
-export function addUser(data) {
+export function addUser() {
 
   return new Promise((resolve, reject) => {
 
@@ -181,6 +181,7 @@ export function addUser(data) {
           email_notif: 0,
           passive: 0,
           enabled: 1,
+          threshold: parseInt(process.env.REACT_APP_DEF_THRESHOLD, PARSE_INT_BASE)
         }
 
         // add first testing Watchdog for new User
