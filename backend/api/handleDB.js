@@ -932,13 +932,14 @@ export function getEmail(uuid) {
 }
 
 // updates user's settings
-export function updateSettings(data, uuid) {
+export function updateSettings(data, activationLinkSent, uuid) {
 
   return new Promise(async (resolve, reject) => {
 
     const sql = `
     UPDATE User SET
       email = $email,
+      email_active = $emailActive
       activation_key = CASE WHEN $newActivationKey THEN $activationKey ELSE activation_key END,
       unsubscribe_key = CASE WHEN $newUnsubscribeKey THEN $unsubscribeKey ELSE unsubscribe_key END
     WHERE
@@ -946,6 +947,7 @@ export function updateSettings(data, uuid) {
     ;`
     const params = {
       $email: data.email === '' ? null : data.email,
+      $emailActive: activationLinkSent ? 0 : 1,
       $newActivationKey: data.activationKey ? true : false,
       $newUnsubscribeKey: data.unsubscribeKey ? true : false,
       $activationKey: data.activationKey,
