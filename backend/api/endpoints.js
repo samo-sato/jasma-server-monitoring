@@ -279,7 +279,7 @@ authRouter.post('/logout', async (req, res) => {
     // prepare token cookie to be removed
     const cookieSettings = {
       httpOnly: true,
-      sameSite: 'None',
+      sameSite: 'Strict',
       secure: secure,
       expires: new Date(0)
     }
@@ -534,7 +534,7 @@ authRouter.get('/selflogs', async (req, res) => {
 function saveTokenToCookie(token, res) {
   res.cookie('token', token, {
     httpOnly: true,
-    sameSite: 'None',
+    sameSite: 'Strict',
     secure: secure
   })
 }

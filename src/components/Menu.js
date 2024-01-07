@@ -29,9 +29,11 @@ function Menu(props) {
           </li>
         )
 
-        if (props.authenticated && val.auth) { // building menu for logged in user
+        if (props.authenticated && val.auth === true) { // add menu items for logged in user
             result.push(mItem)
-        } else if (!props.authenticated && !val.auth) { // building menu for logged out user
+        } else if (!props.authenticated && val.auth === false) { // add menu items for logged out user
+          result.push(mItem)
+        } else if (val.auth === null) { // build menu items for both logged in and logged out user
           result.push(mItem)
         }
 

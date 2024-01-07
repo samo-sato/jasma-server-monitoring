@@ -12,6 +12,7 @@ import Add from './components/content/Watchdogs/Add.js'
 import Logs from './components/content/Logs/Logs.js'
 import SelfLogs from './components/content/SelfLogs/SelfLogs.js'
 import Settings from './components/content/Settings/Settings.js'
+import About from './components/content/About/About.js'
 import New from './components/content/New/New.js'
 import NotFound from './components/content/NotFound/NotFound.js'
 import LoadingIndicator from './components/LoadingIndicator.js'
@@ -58,6 +59,12 @@ const pages = [
     name: 'Settings',
     menuItem: true,
     auth: true
+  },
+  {
+    slug: 'about',
+    name: 'About',
+    menuItem: true,
+    auth: null
   },
   {
     slug: 'not-found',
@@ -137,7 +144,7 @@ function App() {
     const secure = process.env.REACT_APP_SECURE.toLowerCase() === 'true' ? true : false
     const cookieOptions = {
       secure: secure,
-      sameSite: true,
+      sameSite: 'Strict',
       maxAge: 3600 * 24 * 30 * 1000
     }
     const cookieName = 'themeMode'
@@ -291,6 +298,7 @@ function App() {
                 <Route path="/logs" element={<Logs />} />
                 <Route path="/self-logs" element={<SelfLogs />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/about" element={<About />} />
                 <Route path="/new" element={<New pw={pw} />} />
                 <Route path="/logout" element={<Logout onLogout={handleLogout} />} />
                 <Route path="*" element={<NotFound />} />
@@ -298,6 +306,8 @@ function App() {
             ) : (
               // if user is NOT logged in
               <>
+                <Route path="/about" element={<About />} />
+                <Route path="/login" element={<Login onRegister={handleRegister} onLogin={handleLogin} authenticated={authenticated} />} />
                 <Route path="*" element={<Login onRegister={handleRegister} onLogin={handleLogin} authenticated={authenticated} />} />
               </>
             )}
