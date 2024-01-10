@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import List from './List.js'
 import LoadingIndicator from '../../LoadingIndicator.js'
-import { PARSE_INT_BASE, msToWords, refreshDelayShort, autorefreshNote, serErr } from '../../../globals.js'
+import { PARSE_INT_BASE, msToWords, monitoringIntervalNote, refreshDelayShort, autorefreshNote, serErr } from '../../../globals.js'
 import { generateStatusMsg } from '../../../functions.js'
 import { getWatchdogs } from '../../../fetchAPI.js'
 
@@ -70,6 +70,7 @@ function Watchdogs() {
         <div>
           {message}
         </div>
+        <p><i>{ monitoringIntervalNote }</i></p>
         <p><i>{ autorefreshNote }</i></p>
         <button onClick={handleAdd}>Add new Watchdog</button>
       </article>

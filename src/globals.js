@@ -17,6 +17,7 @@ export const snoozePath = 'snooze'
 // autorefresh timing vairables
 export const refreshDelayShort = 1000 // milliseconds - used in setInterval
 export const refreshDelayLong = 15000 // milliseconds - used in setInterval
+export const monitoringIntervalNote = `Monitoring is executed every ${msToWords(parseInt(process.env.REACT_APP_REPEAT_DELAY, PARSE_INT_BASE))}`
 export const autorefreshNote = 'Data on this page are updated automatically'
 
 // takes number of milliseconds and returns aprox. string description of that time length
@@ -34,7 +35,7 @@ export function msToWords(ms) {
 
   const number = Math.round(ms / divider)
   const s = number === 0 || number > 1 ? 's' : ''
-  return `≈ ${number} ${unit}${s}`
+  return ` ${number} ${unit}${s}`
 
 }
 
