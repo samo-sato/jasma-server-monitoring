@@ -8,6 +8,10 @@ import { Writable } from 'stream'
 
 import { hash, generateUUID, generateWatchdogId, saltedPwHash } from '../functions.js'
 
+// import shared environment variables from ".env" file
+import dotenv from 'dotenv'
+dotenv.config()
+
 // database will be used to seed the tables
 import sqlite3 from 'sqlite3'
 const db = new sqlite3.Database('./backend/db/service_monitor.db')

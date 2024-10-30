@@ -70,13 +70,13 @@ Any previous outages or other breaks in server monitoring app are picked up by s
 These logs are stored in designated database table. Self-logs are global for whole app and not User specific.
 
 3. **System logs**
-Information about errors and selected events that occur during backend code execution is stored into `/backend/logs` file as JSON. Logging is done by [Winston](https://www.npmjs.com/package/winston) logger module.
+Information about errors and selected events that occur during backend code execution is stored into `backend/logs` file as JSON. Logging is done by [Winston](https://www.npmjs.com/package/winston) logger module.
 
 4. **Real time console logging (CLI)**
-As `/backend/server.js` runs in the background, structured information from real-time server monitoring can be viewed as console output. This feature is especially useful for debugging and quickly grasping the operation of the application.
+As `backend/server.js` runs in the background, structured information from real-time server monitoring can be viewed as console output. This feature is especially useful for debugging and quickly grasping the operation of the application.
 
 ### Rate Limiting
-Rate limiting function is implemented using [Express Rate Limit](https://www.npmjs.com/package/express-rate-limit) middleware. Rate limit thresholds can be modified directly within `/backend/api/endpoints.js` file.
+Rate limiting function is implemented using [Express Rate Limit](https://www.npmjs.com/package/express-rate-limit) middleware. Rate limit thresholds can be modified directly within `backend/api/endpoints.js` file.
 
 ## Tech used
 This app is primarily built using the following technologies:
@@ -99,23 +99,22 @@ Download or clone repository files to your machine.
     3. Install dependency packages using `npm install` command within project directory
 
 3. ### Set environment variables
-There are two required sets of environment variables:
+This application requires two sets of environment variables, some of which must be defined before starting:
+
+  - **Exposed environment variables** with `REACT_APP_` prefix
+**Warning:** *"Exposed" variables are publicly accessible and should not contain sensitive information. Note that some of these variables are accessed both by frontend and backend using [`dotenv`] module.*
 
   - **Hidden environment variables** with `JASMA_` prefix
 **Warning:** *"Hidden" variables contain sensitive data.*
-List of required *"hidden"* environment variables, with description and examples can be found in `/backend/.env.example` file. Cut and paste these variables to OS specific file designated for environment variables. For example in Linux Mint 20 Mate, these variables can be stored in the `~/.bashrc` or `/etc/environment` files.
 
-  - **Exposed environment variables** with `REACT_APP_` prefix
-**Warning:** *"Exposed" variables can be read by anyone with access to web UI. Do not store sensitive information in these variables. Also, some of these variables are being accessed not only from frontend side, but also are utilized by the backend using [`dotenv`](https://www.npmjs.com/package/dotenv) module.*
-Empty file for *"exposed"* environment variables is located at `/.env`. Use `/.env.example` file as a reference to help you populate your own `/.env` file with required *"exposed"* variables.
-
-**Note:** *After both "hidden" and "exposed" variables are set, use `source` command to apply the changes. For example `source ~/.bashrc` and `source /.env`. Make sure that node's [`process.env`](https://nodejs.org/api/process.html#processenv) property has access to these variables.*
+### How to set environment variables
+All environment variables are source from file `.env`. Create this file by copying and renaming `.env.example` which already includes all necessary environment variables and descriptions. Many variables already have default values, but those without a pre-assigned value and marked as *MANDATORY* must be assigned one before starting the application.
 
 4. ### Create database tables
-Run file `/backend/db/create_tables.js`. This will create a database file in the same directory filled with tables necessary for the app.
+Run file `backend/db/create_tables.js`. This will create a database file in the same directory filled with tables necessary for the app.
 
 5. ### Seed database tables and choose password
-Run file `/backend/db/seed_tables.js`. This will ask you to write the password to console. Write password and hit enter. You will use this password later to log in to the web UI as the master user. After password is accepted, the tables will be filled with first data.
+Run file `backend/db/seed_tables.js`. This will ask you to write the password to console. Write password and hit enter. You will use this password later to log in to the web UI as the master user. After password is accepted, the tables will be filled with first data.
 
 6. ### Deploying under base-path URL (optional)
 In case of deployment under specific path, for example https://www.example.org/jasma, the following steps should be taken:
@@ -124,5 +123,5 @@ In case of deployment under specific path, for example https://www.example.org/j
  - Adjust settings of your web server to accommodate new base path if necessary
 
 7. ### Run application
-    1. Run the backend and API server by executing `/backend/server.js` file in the background.
-    2. Serve the frontend web UI by either running the development server using `npm start` which should open web UI automatically in the browser or make React build `npm run build` and serve the `/build` folder with static web files using a tool like *serve*, *http-server* or similar.
+    1. Run the backend and API server by executing `backend/server.js` file in the background.
+    2. Serve the frontend web UI by either running the development server using `npm start` which should open web UI automatically in the browser or make React build `npm run build` and serve the `build` folder with static web files using a tool like *serve*, *http-server* or similar.

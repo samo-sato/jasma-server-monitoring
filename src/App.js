@@ -16,9 +16,8 @@ import About from './components/content/About/About.js'
 import New from './components/content/New/New.js'
 import NotFound from './components/content/NotFound/NotFound.js'
 import LoadingIndicator from './components/LoadingIndicator.js'
-import { PARSE_INT_BASE, refreshDelayLong, serErr } from './globals.js'
+import { PARSE_INT_BASE, refreshDelayLong } from './globals.js'
 import { isAuthenticated } from './fetchAPI.js'
-import { generateStatusMsg } from './functions.js'
 import './general.css'
 
 // array with objects containing informations about each component associated web page

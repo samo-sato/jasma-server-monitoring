@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useState } from 'react'
 import { getStats } from '../../../fetchAPI.js'
-import { PARSE_INT_BASE, msToWords, refreshDelayShort, monitoringIntervalNote, autorefreshNote, serErr } from '../../../globals.js'
+import { refreshDelayShort, monitoringIntervalNote, autorefreshNote, serErr } from '../../../globals.js'
 import LoadingIndicator from '../../LoadingIndicator.js'
 
 function Home() {
