@@ -1,6 +1,6 @@
 {
   "name": "JASMA-Server-Monitoring",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^6.1.5",
