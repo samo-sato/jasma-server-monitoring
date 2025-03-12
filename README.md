@@ -110,18 +110,21 @@ This application requires two sets of environment variables, some of which must 
 ### How to set environment variables
 All environment variables are sourced from file `.env`. Create this file by copying and renaming `.env.example` which already includes all necessary environment variables and descriptions. Many variables already have default values, but those without a pre-assigned value and marked as `Required` must be assigned value before starting the application.
 
-4. ### Create database tables
+4. ### Compile TypeScript files
+Run `npx tsc` to compile TypeScript files into JavaScript files
+
+5. ### Create database tables
 Run file `backend/db/create_tables.js`. This will create a database file in the same directory filled with tables necessary for the app.
 
-5. ### Seed database tables and choose password
+6. ### Seed database tables and choose password
 Run file `backend/db/seed_tables.js`. This will ask you to write the password to console. Write password and hit enter. You will use this password later to log in to the frontend web UI as the master User. After password is accepted, the tables will be filled with first data.
 
-6. ### Deploying under base-path URL (optional)
+7. ### Deploying under base-path URL (optional)
 In case of deployment under specific path, for example https://www.example.org/jasma, the following steps should be taken:
  - Add *homepage* property into `package.json` file with value of desired base path (eg. `"homepage": "jasma",`)
  - Assign desired base path to exposed environment variable *REACT_APP_BASE_PATH* in `.env` file (eg. `REACT_APP_BASE_PATH=jasma`)
  - Adjust settings of your web server to accommodate new base path if necessary
 
-7. ### Run application
+8. ### Run application
     1. Run the backend and API server by executing `backend/server.js` file in the background.
     2. Serve the frontend web UI by either running the development server using `npm start` which should open frontend web UI automatically in the browser or make React build `npm run build` and serve the `build` folder with static web files using a tool like *serve*, *http-server* or similar.
