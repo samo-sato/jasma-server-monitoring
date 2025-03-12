@@ -1,40 +1,46 @@
-import { useEffect, useRef, useState } from 'react'
-import { getSelfLogs } from '../../../fetchAPI.js'
-import LoadingIndicator from '../../LoadingIndicator.js'
+import { useEffect, useRef, useState } from 'react';
+import { getSelfLogs } from '../../../fetchAPI.js';
+import LoadingIndicator from '../../LoadingIndicator.jsx';
 
 function SelfLogs() {
 
   // useState
-  const [logRows, setLogRows] = useState(
-    <tr>
-      <td colSpan="3"><LoadingIndicator text="Loading logs" /></td>
-    </tr>
-  )
+  const loadingIndicator = (
+  <tr key={0}>
+    <td colSpan={3}><LoadingIndicator text="Loading logs" /></td>
+  </tr>
+  );
+  const [logRows, setLogRows] = useState([loadingIndicator]);
 
   // useEffect ran twice workaround
-  const effectRan = useRef(false)
+  const effectRan = useRef(false);
+
+  interface SelfLog {
+    start: string | null;
+    stop: string | null;
+  }
 
   useEffect(() => {
     if (effectRan.current === false) { // useEffect ran twice workaround
       getSelfLogs()
         .then(selfLogs => {
-          let jsxRows = []
-          selfLogs.forEach((log, index) => {
+          let jsxRows: Array<JSX.Element> = [];
+          selfLogs.forEach((log: SelfLog, index: number) => {
             jsxRows.push(
               <tr key={ index }>
                 <td className="good"  style={{textAlign: 'right'}}>{ log.start }</td>
-                <td style={{textAlign: 'center'}}> --> </td>
+                <td style={{textAlign: 'center'}}> --&gt; </td>
                 <td className="bad"  style={{textAlign: 'left'}}>{ log.stop || <span className="good">Still running...</span> }</td>
               </tr>
             )
           })
-          setLogRows(jsxRows)
+          setLogRows(jsxRows);
         })
         .catch(error => {console.log(error)})
 
       // useEffect ran twice workaround
       return () => {
-        effectRan.current = true
+        effectRan.current = true;
       }
     }
 
@@ -53,7 +59,7 @@ function SelfLogs() {
       <thead>
         <tr>
           <th style={{textAlign: 'right'}}>Started</th>
-          <th style={{textAlign: 'center'}}>--></th>
+          <th style={{textAlign: 'center'}}>--&gt;</th>
           <th style={{textAlign: 'left'}}>Stopped</th>
         </tr>
       </thead>
@@ -65,4 +71,4 @@ function SelfLogs() {
   )
 }
 
-export default SelfLogs
+export default SelfLogs;

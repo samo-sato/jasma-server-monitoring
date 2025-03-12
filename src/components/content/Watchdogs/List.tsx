@@ -1,38 +1,41 @@
-import { NavLink } from 'react-router-dom'
-import CopyButton from '../../CopyButton.js'
-import { generateHelp, generateSnoozeUrl } from '../../../functions.js'
-import { PARSE_INT_BASE, msToWords } from '../../../globals.js'
+import { NavLink } from 'react-router-dom';
+import CopyButton from '../../CopyButton.jsx';
+import { generateHelp, generateSnoozeUrl } from '../../../functions.jsx';
+import { toInt, msToWords, validateEnv } from '../../../utils.js';
 
-function List(props) {
+// Import environment variables
+const REACT_APP_REPEAT_DELAY = validateEnv(process.env.REACT_APP_REPEAT_DELAY, true);
 
-  // returns information about last state of given watchdog
-  function generateLastKnownStatus(watchdog) {
-    if (watchdog.last_log_at) { // if last log available
-      const msAgo = Date.now() - watchdog.last_log_at
+function List(props: any) {
 
-      let lastState = watchdog.last_status ? 'ON-LINE' : 'OFF-LINE' // status description of last log for user
-      return `${lastState} ${msToWords(msAgo)} ago` // final string to be shown to user
+  // Returns information about last state of given watchdog
+  function generateLastKnownStatus(watchdog: any) {
+    if (watchdog.last_log_at) { // If last log available
+      const msAgo = Date.now() - watchdog.last_log_at;
+
+      let lastState = watchdog.last_status ? 'ON-LINE' : 'OFF-LINE'; // Status description of last log for user
+      return `${lastState} ${msToWords(msAgo)} ago`; // Final string to be shown to user
     } else {
       if (watchdog.enabled) {
-        return `No logs yet, please wait up to ${msToWords(parseInt(process.env.REACT_APP_REPEAT_DELAY, PARSE_INT_BASE))}`
+        return `No logs yet, please wait up to ${msToWords(toInt(REACT_APP_REPEAT_DELAY))}`;
       } else {
-        return 'Watchdog is disabled'
+        return 'Watchdog is disabled';
       }
     }
   }
 
-  // get appropriate css class name based on Watchdog last connectivity status and enabled/disabled status
-  function getClassName(lastStatus, lastLogAt, enabled) {
+  // Get appropriate css class name based on Watchdog last connectivity status and enabled / disabled status
+  function getClassName(lastStatus: number, lastLogAt: number, enabled: boolean) {
     if (enabled && lastLogAt) {
-      return lastStatus === 1 ? 'good' : 'bad'
+      return lastStatus === 1 ? 'good' : 'bad';
     } else {
-      return ''
+      return '';
     }
   }
 
-  // teble body to render
-  const tableBody = props.watchdogs.map((watchdog) => {
-    const url = watchdog.url || generateSnoozeUrl(watchdog.id)
+  // Teble body to render
+  const tableBody = props.watchdogs.map((watchdog: any) => {
+    const url = watchdog.url || generateSnoozeUrl(watchdog.id);
     return (
       <tr key={watchdog.id}>
         <td>{watchdog.name}</td>
@@ -51,7 +54,7 @@ function List(props) {
 
   return (
     <div>
-      <table border="0">
+      <table border={0}>
         <thead>
           <tr>
             <th>Name</th>
@@ -67,7 +70,7 @@ function List(props) {
         </tbody>
         <tfoot>
           <tr>
-            <td colSpan="7">End of the list</td>
+            <td colSpan={7}>End of the list</td>
           </tr>
         </tfoot>
       </table>
@@ -75,4 +78,4 @@ function List(props) {
   )
 }
 
-export default List
+export default List;

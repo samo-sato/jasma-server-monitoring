@@ -9,4 +9,4 @@ function NotFoundContent() {
   )
 }
 
-export default NotFoundContent
+export default NotFoundContent;

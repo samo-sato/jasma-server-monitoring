@@ -1,9 +1,17 @@
-// this component contains button used to toggle between different themes (dark/light/auto mode)
+// This component contains button used to toggle between different themes (dark/light/auto mode)
 
-function ThemeSetting(props) {
+interface Props {
+  themeProps: {
+    themeStyle: string;
+    themeMode: string;
+    themeToggle: () => void;
+  }
+}
+
+function ThemeSetting(props: Props) {
 
   function handleClick() {
-    props.themeProps.themeToggle()
+    props.themeProps.themeToggle();
   }
 
   return (
@@ -18,4 +26,4 @@ function ThemeSetting(props) {
   )
 }
 
-export default ThemeSetting
+export default ThemeSetting;

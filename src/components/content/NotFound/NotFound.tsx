@@ -1,6 +1,6 @@
 // 404 page not found component wrapper
 
-import NotFoundContent from './NotFoundContent.js'
+import NotFoundContent from './NotFoundContent.jsx';
 
 function NotFound() {
 
@@ -11,4 +11,4 @@ function NotFound() {
   )
 }
 
-export default NotFound
+export default NotFound;

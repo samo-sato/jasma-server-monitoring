@@ -1,21 +1,22 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import CopyButton from '../../CopyButton.js'
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import CopyButton from '../../CopyButton.jsx';
+import { serErr } from '../../../utils.js';
 
-function New(props) {
+function New(props: any) {
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   useEffect(() => {
 
       if (!props.pw) {
-        navigate('/')
+        navigate('/');
       }
 
   }, [])
 
   if (props.pw) {
-    const pw = props.pw
+    const pw = props.pw;
     return (
       <article>
         <h1>Demo account created</h1>
@@ -28,8 +29,10 @@ function New(props) {
         </div>
       </article>
     )
+  } else {
+    return <p>{ serErr }</p>
   }
 
 }
 
-export default New
+export default New;

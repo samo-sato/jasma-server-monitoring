@@ -1,0 +1,14 @@
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App.jsx';
+
+const element: any = document.getElementById('root');
+const root = ReactDOM.createRoot(element);
+root.render(
+  <React.StrictMode>
+    <BrowserRouter basename={process.env.REACT_APP_BASE_PATH}>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
+)
