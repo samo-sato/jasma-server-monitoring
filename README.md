@@ -60,7 +60,7 @@ In the frontend web UI's upper corner menu, User can toggle between *light/dark/
 Logging performed in *"runs"* periodically at specific time intervals, as defined in [environment variables](#set-environment-variables). During each *"run"*, different types of logs are being generated, stored or displayed and if enabled, email notifications might be sent. There are four types of logs:
 
 1. **Main logs**
-Each log is associated with a specific Watchdog. Logs can be viewed on the frontend web UI *Logs* page. Different filters can be applied on search function to display only specific types of logs. These logs are stored in designated database table. Main logs can have one of the following status:
+Each log is associated with a specific Watchdog and tracks the duration of server status changes. Logs can be viewed on the frontend web UI *Logs* page. Different filters can be applied on search function to display only specific types of logs. These logs are stored in designated database table. Each log entry contains start and stop timestamps to track how long a particular status lasted. Main logs can have one of the following status:
 
     - **0** => *not ok*, server has not provided valid response
     - **1** => *ok*, server has provided valid response

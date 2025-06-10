@@ -8,7 +8,7 @@ const db = new sqlite3.Database('./backend/db/service_monitor.db');
 import { handleError } from '../functions.js';
 
 // Import types
-import { Logs } from './functions.js';
+import { Log, WatchdogState, needNewLog } from './functions.js';
 
 // Interfaces
 export interface GetEnabledWatchdogsResponse {
@@ -19,15 +19,8 @@ export interface GetEnabledWatchdogsResponse {
   email_notif: number;
   enabled: number;
   email: string;
+  threshold: number;
   email_active: number;
-}
-
-// Interface for results of getting latest batch of logs
-interface getLastBatchResults {
-  batch: number;
-  timestamp: number;
-  id_watchdog: string;
-  status: number;
 }
 
 // Interface for results of getting latest self log
@@ -85,54 +78,91 @@ const handleDB = {
     })
   },
 
-  // Write watchdog logs, take data from argument
-  // First argument is array of objects with log data, each object representing log data of specific watchdog
-  // Second argument is current cycle batch number (each subsequent monitoring `cycle` has unique batch number incremented by 1)
-  writeLogs: function (logs: Logs[]): Promise<string> {
-    return new Promise((resolve, reject) => {
+  // Save / update watchdog logs, take data from argument
+  updateAddLogs: async function (states: WatchdogState[]): Promise<string> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let logsToAdd: Log[] = [];
+        let logsToUpdate: Log[] = [];
 
-      if (logs.length > 0) { // If logs provided
-
-        // Use a prepared statement
-        const sql = `
-        INSERT INTO
-          Watchdog_log (batch, timestamp, id_watchdog, status, note)
-        VALUES (?, ?, ?, ?, ?)
-        ;`;
-        const stmt = db.prepare(sql, (error) => {
-          if (error) {
-            const msg = 'Statement preparing to write logs failed';
-            handleError(error, msg);
-            reject(msg);
-          }
-        })
-
-        // Insert data into the table
-        logs.forEach((log) => {
-          stmt.run(log.batch, log.timestamp, log.id_watchdog, log.status, log.note, (error: any) => {
-            if (error) {
-              const msg = 'Log adding failed';
-              handleError(error, msg);
-              reject(msg);
-            }
-          })
-        })
-
-        // Finalize the statement to close it
-        stmt.finalize((error) => {
-          if (error) {
-            const msg = 'Finalizing statement failed';
-            handleError(error, msg);
-            reject(msg);
+        // First, determine which logs need to be added vs updated
+        await Promise.all(states.map(async state => {
+          const log: Log = {
+            ...state,
+            timestamp_start: Date.now(),
+            timestamp_stop: Date.now()
+          };
+          const needsNew = await needNewLog(log);
+          if (needsNew) {
+            logsToAdd.push(log);
           } else {
-            resolve(`Added ${logs.length} new Watchdog log(s)`);
+            logsToUpdate.push(log);
           }
-        })
+        }));
 
-      } else {
-        resolve('Empty log list, no new logs added');
+        // Begin transaction
+        db.run('BEGIN TRANSACTION');
+
+        // Handle new logs
+        if (logsToAdd.length > 0) {
+          const insertStmt = db.prepare(`
+            INSERT INTO Watchdog_log (id_watchdog, status, timestamp_start, timestamp_stop, note)
+            VALUES (?, ?, ?, ?, ?)
+          `);
+
+          logsToAdd.forEach(log => {
+            insertStmt.run(
+              log.id_watchdog,
+              log.status,
+              log.timestamp_start,
+              log.timestamp_stop,
+              log.note
+            );
+          });
+          insertStmt.finalize();
+        }
+
+        // Handle updates
+        if (logsToUpdate.length > 0) {
+          const updateStmt = db.prepare(`
+            UPDATE Watchdog_log 
+            SET status = ?, timestamp_stop = ?, note = ?
+            WHERE id_watchdog = ? AND id = (
+              SELECT id FROM Watchdog_log 
+              WHERE id_watchdog = ? 
+              ORDER BY timestamp_stop DESC LIMIT 1
+            )
+          `);
+
+          logsToUpdate.forEach(log => {
+            updateStmt.run(
+              log.status,
+              log.timestamp_stop,
+              log.note,
+              log.id_watchdog,
+              log.id_watchdog
+            );
+          });
+          updateStmt.finalize();
+        }
+
+        // Commit transaction
+        db.run('COMMIT', (err) => {
+          if (err) {
+            db.run('ROLLBACK');
+            handleError(err, 'Failed to commit transaction');
+            reject(err);
+          } else {
+            resolve(`Added ${logsToAdd.length} new logs and updated ${logsToUpdate.length} existing logs`);
+          }
+        });
+
+      } catch (error) {
+        db.run('ROLLBACK');
+        handleError(error, 'Failed to process logs');
+        reject(error);
       }
-    })
+    });
   },
 
   // Get watchdog data of all enabled watchdogs, with email address of user
@@ -145,6 +175,7 @@ const handleDB = {
           Watchdog.url,
           Watchdog.passive,
           Watchdog.email_notif,
+          Watchdog.threshold,
           Watchdog.enabled,
           User.email,
           User.email_active
@@ -166,34 +197,6 @@ const handleDB = {
         })
       })
   },
-  
-  // Get latest batch of logs
-  getLastBatch: function (): Promise<getLastBatchResults[]> {
-    return new Promise((resolve, reject) => {
-      const sql = `
-      SELECT
-        batch,
-        timestamp,
-        id_watchdog,
-        status
-      FROM
-        Watchdog_log
-      WHERE
-        batch = (SELECT MAX(batch)
-      FROM
-        Watchdog_log)
-      ;`;
-      db.all(sql, function(error, rows: getLastBatchResults[]) {
-        if (error) {
-          const msg = 'Getting last batch of logs failed';
-          handleError(error, msg);
-          reject(msg);
-        } else {
-          resolve(rows);
-        }
-      })
-    })
-  },
 
   // Get latest self log
   getLastSelfLog: function (): Promise<getLastSelfLogResult> {
@@ -209,7 +212,27 @@ const handleDB = {
         }
       })
     })
+  },
+
+  // Get last log with associated Watchdog ID
+  getLastLog: function (id_watchdog: string): Promise<Log | undefined> {
+    return new Promise((resolve, reject) => {
+      
+      const sql = 'SELECT * FROM Watchdog_log WHERE id_watchdog = $id_watchdog ORDER BY timestamp_stop DESC LIMIT 1';
+      const params = { $id_watchdog: id_watchdog };
+      db.get(sql, params,
+      function(error, row: Log | undefined) {
+        if (error) {
+          const msg = 'Getting latest log failed';
+          handleError(error, msg);
+          reject(msg);
+        } else {
+          resolve(row);
+        }
+      })
+    })
   }
+
 
 }
 

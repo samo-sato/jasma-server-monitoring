@@ -17,6 +17,7 @@ import dns from 'dns'; // Checking internet connection status
 import { toInt } from '../../src/utils.js'; // Convert string to integer
 import { sendMail, SendMailResponse } from '../functions.js'; // Send emails
 import { GetEnabledWatchdogsResponse } from './handleDB.js'; // Interface for Watchdogs
+import handleDB from './handleDB.js'; // Handle database
 
 // Import environment variables
 const REACT_APP_REPEAT_DELAY = validateEnv(process.env.REACT_APP_REPEAT_DELAY, true);
@@ -33,9 +34,15 @@ interface WatchdogToNotify {
   note: string;
 }
 
-export interface Logs {
-  batch: number;
-  timestamp: number;
+export interface Log {
+  id_watchdog: string;
+  status: number;
+  timestamp_start: number;
+  timestamp_stop: number;
+  note: string;
+}
+
+export interface WatchdogState {
   id_watchdog: string;
   status: number;
   note: string;
@@ -116,7 +123,12 @@ export function checkEndpoints(endpoints: string[]): Promise<any[]> {
       controller.abort();
     }, timeoutMs)
 
-    nodeFetch(endpoint, {signal: controller.signal})
+    nodeFetch(endpoint, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+      }
+    })
       .then(response => {
         if (response.status >= 200 && response.status <= 299) {
           resolve({
@@ -223,19 +235,19 @@ export function getPassiveWIDs(watchdogs: GetEnabledWatchdogsResponse[]) {
 }
 
 /**
- * Generate array of logs based on following input parameters
+ * Get current state of Watchdogs based on following input parameters
  * @param watchdogs Array of enabled Watchdog items
- * @param batchNumber Batch number of logs that will be generated
  * @param activeWatchdogsResults Latest results from Watchdogs in active mode
  * @param alivePassiveWIDs Latest IDs of passive Watchdogs signaling ok status
- * @returns Array of logs
+ * @returns Array of watchdog states
 */
-export async function generateLogs(watchdogs: GetEnabledWatchdogsResponse[], batchNumber: number, activeWatchdogsResults: any[], alivePassiveWIDs: string[]): Promise<Logs[]> {
-  
-  let logs: Logs[] = [];
+export async function getCurrentStateOfWatchdogs(watchdogs: GetEnabledWatchdogsResponse[], activeWatchdogsResults: any[], alivePassiveWIDs: string[]): Promise<WatchdogState[]> {
+
+  let states: WatchdogState[] = [];
   const results = await activeWatchdogsResults;
   watchdogs.forEach(watchdog => {
-    // Adding active mode Watchdog logs
+    
+    // Adding active mode Watchdog states
     if (watchdog.passive === 0) {
       results.forEach(result => {
 
@@ -250,9 +262,7 @@ export async function generateLogs(watchdogs: GetEnabledWatchdogsResponse[], bat
         }
 
         if (resultUrl === watchdog.url) {
-          logs.push({
-            batch: batchNumber,
-            timestamp: Date.now(),
+          states.push({
             id_watchdog: watchdog.id,
             status: result.status === 'fulfilled' ? 1 : 0,
             note: result.status === 'fulfilled' ? result.value.note : result.reason.note
@@ -261,15 +271,13 @@ export async function generateLogs(watchdogs: GetEnabledWatchdogsResponse[], bat
       })
     }
 
-    // Adding passive mode Watchdog logs
+    // Adding passive mode Watchdog states
     if (watchdog.passive === 1) {
       let matchFound = false;
       alivePassiveWIDs.forEach(wid => {
         if (wid === watchdog.id) {
           matchFound = true
-          logs.push({
-            batch: batchNumber,
-            timestamp: Date.now(),
+          states.push({
             id_watchdog: watchdog.id,
             status: 1,
             note: 'Ok. Endpoint visited in given time period.'
@@ -277,9 +285,7 @@ export async function generateLogs(watchdogs: GetEnabledWatchdogsResponse[], bat
         }
       })
       if (!matchFound) {
-        logs.push({
-          batch: batchNumber,
-          timestamp: Date.now(),
+        states.push({
           id_watchdog: watchdog.id,
           status: 0,
           note: 'Not ok. Endpoint not visited in given time period.'
@@ -289,6 +295,53 @@ export async function generateLogs(watchdogs: GetEnabledWatchdogsResponse[], bat
 
   })
 
-  return logs;
+  return states;
 
+}
+
+/**
+ * Check, if adding new log is needed or updating existing log is needed
+ * @param state
+ * @returns `true` if adding new log is needed, `false` if updating existing log is needed
+ * Adding new log is needed if any of the following conditions is met:
+ *  1) Last log with same Watchdog ID does not exist yet
+ *  2) Last log with same Watchdog ID has different status
+ *  3) Last log with same Watchdog ID has not been updated lately (last log is older than `delay` ms + 5% buffer)
+ * Otherwise, updating existing log is needed
+*/
+export async function needNewLog(state: WatchdogState) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const lastLog = await handleDB.getLastLog(state.id_watchdog);
+      
+      // 1) If no previous log exists, we need a new one
+      if (!lastLog) {
+        resolve(true);
+        return;
+      }
+
+      // 2) If last log has different status, we need a new one
+      if (lastLog.status !== state.status) {
+        resolve(true);
+        return;
+      }
+
+      // 3) If last log is older than `delay` ms + 5% buffer, we need a new one
+      // This ensures we have regular log entries even if status hasn't changed
+      // Adding 5% buffer to account for execution time and slight delays
+      const buffer = Math.floor(delay * 0.05); // 5% of delay
+      if (Date.now() - lastLog.timestamp_stop > delay + buffer) {
+        resolve(true);
+        return;
+      }
+
+      // Otherwise, we need to update existing log
+      resolve(false);
+      return;
+
+    } catch (error) {
+      handleError(error, 'Failed to get last log');
+      reject(error);
+    }
+  })
 }

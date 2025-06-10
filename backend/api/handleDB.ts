@@ -276,7 +276,7 @@ export function getWatchdogs(uuid: string): Promise<GenericPromiseReturn> {
     const sql = `
     SELECT
       Watchdog.*,
-      MAX(Watchdog_log.timestamp) as last_log_at,
+      MAX(Watchdog_log.timestamp_stop) as last_log_at,
       Watchdog_log.status as last_status,
       Watchdog_log.note as last_note
     FROM
@@ -612,7 +612,7 @@ export function getStats(uuid: string): Promise<GenericPromiseReturn> {
       SELECT
         Watchdog.name as watchdog,
       CASE
-        WHEN Watchdog_log.status = 1 AND Watchdog_log.timestamp >= $timestampNow - $interval THEN 1
+        WHEN Watchdog_log.status = 1 AND Watchdog_log.timestamp_stop >= $timestampNow - $interval THEN 1
         ELSE 0
       END AS is_online
       FROM
@@ -623,7 +623,7 @@ export function getStats(uuid: string): Promise<GenericPromiseReturn> {
         Watchdog.id = Watchdog_log.id_watchdog AND
         Watchdog.uuid_user = $uuid
       GROUP BY Watchdog.id
-      HAVING MAX(Watchdog_log.timestamp)
+      HAVING MAX(Watchdog_log.timestamp_stop)
       ;`;
 
     const params = {
@@ -881,8 +881,10 @@ export function getSettings(uuid: string): Promise<GenericPromiseReturn> {
 export function getLogs(filter: LogFilterQuery, uuid: string): Promise<GenericPromiseReturn> {
 
   interface ConvertedRows {
-    datetime: string;
-    timestamp: number;
+    datetime_start: string;
+    datetime_stop: string;
+    timestamp_start: number;
+    timestamp_stop: number;
   }
 
   interface GetLogsResponse {
@@ -913,7 +915,8 @@ export function getLogs(filter: LogFilterQuery, uuid: string): Promise<GenericPr
     const sql = `
       SELECT
         Watchdog_log.id,
-        Watchdog_log.timestamp,
+        Watchdog_log.timestamp_start,
+        Watchdog_log.timestamp_stop,
         Watchdog.name as watchdog,
         Watchdog_log.status,
         Watchdog_log.note
@@ -925,8 +928,8 @@ export function getLogs(filter: LogFilterQuery, uuid: string): Promise<GenericPr
         Watchdog_log.id_watchdog = Watchdog.id AND
         id_watchdog IN (${selectedWatchdogs.map(() => '?').join(', ')}) AND
         status IN (${selectedStatuses.map(() => '?').join(', ')}) AND
-        timestamp BETWEEN $dateFrom AND $dateTo
-      ORDER BY timestamp DESC
+        timestamp_stop BETWEEN $dateFrom AND $dateTo
+      ORDER BY timestamp_stop DESC
       ;`;
 
     const params = [
@@ -947,12 +950,13 @@ export function getLogs(filter: LogFilterQuery, uuid: string): Promise<GenericPr
           data: false
         })
       } else {
-        // Modify timestamp using the time conversion function
-        const convertedRows = (rows as { timestamp: number }[]).map((row) => {
+        // Modify timestamps using the time conversion function
+        const convertedRows = (rows as { timestamp_start: number; timestamp_stop: number }[]).map((row) => {
           if (typeof row === 'object' && row !== null) {
             return {
               ...row,
-              datetime: getCurrentDateTimeUTC(row.timestamp),
+              datetime_start: getCurrentDateTimeUTC(row.timestamp_start),
+              datetime_stop: getCurrentDateTimeUTC(row.timestamp_stop),
             };
           }
           return row;
@@ -963,7 +967,6 @@ export function getLogs(filter: LogFilterQuery, uuid: string): Promise<GenericPr
           data: convertedRows,
           count: rows.length
         })
-
       }
     })
   })

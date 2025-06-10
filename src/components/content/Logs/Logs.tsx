@@ -49,13 +49,13 @@ function Logs() {
 
   function generateLogTable(data: any) {
     if (data) {
-
       let rows: any = [];
       data.forEach((row: any, index: any) => {
         let cName = row.status === 1 ? 'good' : (row.status === 0 ? 'bad' : ''); // Rows with `good` status will be different style than rows with "bad" status
         rows.push(
           <tr key={index} className={cName}>
-            <td>{row.datetime}</td>
+            <td>{row.datetime_start}</td>
+            <td>{row.datetime_stop}</td>
             <td>{row.watchdog}</td>
             <td>{row.status}</td>
             <td>{row.note}</td>
@@ -69,7 +69,8 @@ function Logs() {
           <table>
             <thead>
               <tr>
-                <td>Datetime</td>
+                <td>From</td>
+                <td>To</td>
                 <td>Watchdog</td>
                 <td>Status</td>
                 <td style={{width:'45%'}}>Note</td>

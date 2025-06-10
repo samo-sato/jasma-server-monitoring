@@ -81,8 +81,8 @@ const tableData = [
       return `
       CREATE TABLE IF NOT EXISTS ${this.name} (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        batch	DATE NOT NULL,
-        timestamp	DATE NOT NULL,
+        timestamp_start	INTEGER NOT NULL,
+        timestamp_stop	INTEGER NOT NULL,
         id_watchdog	TEXT NOT NULL,
         status	INTEGER NOT NULL,
         note	TEXT NOT NULL,

@@ -71,10 +71,6 @@ async function scan(): Promise<void> {
     const watchdogs = await handleDB.getEnabledWatchdogs();
     console.log(style['lightBlue'], `${level2}${watchdogs.length} Watchdog(s) loaded`);
 
-    // Get latest batch of logs
-    const logsBefore = await handleDB.getLastBatch();
-    console.log(style['lightBlue'], `${level2}${logsBefore.length} log(s) from previous run loaded`);
-
     // Get latest self log
     const lastSelfLog = await handleDB.getLastSelfLog();
     console.log(style['lightBlue'], `${level2}Last self-log loaded`);
@@ -121,28 +117,22 @@ async function scan(): Promise<void> {
     console.log(style['lightBlue'], `${level2}${alivePassiveWIDs.length} out of ${passiveWIDs.length} passive mode Watchdog(s) recently visited from monitored server(s)`);
 
     //########################################################################//
-    console.log(style['lightBlue'], `${level1}Step #${stepCount++} - Generating logs`);
+    console.log(style['lightBlue'], `${level1}Step #${stepCount++} - Generating states`);
     //########################################################################//
 
-    // Calculate batch number from last scanning results (if exists)
-    // If no logs present, first batch number will be `1`
-    // Batch number is unique ID for collection of watchdog logs generated in one scanning interval
-    const batchNumber = logsBefore[0] ? logsBefore[0].batch + 1 : 1;
-    console.log(style['lightBlue'], `${level2}New batch number is ${batchNumber}`);
-
-    // Generate array of logs that will be saved to DB in this scanning interval
-    const logs = await functions.generateLogs(watchdogs, batchNumber, activeWatchdogsResults, alivePassiveWIDs)
-    console.log(style['lightBlue'], `${level2}Generated ${logs.length} log(s) for this batch (run)`);
-    console.log(style['lightBlue'], `${level2}${logs.filter(value => value.status === 1).length} log(s) have ok status`);
-    console.log(style['lightBlue'], `${level2}${logs.filter(value => value.status === 0).length} log(s) have not ok status`);
+    // Generate array of states that will be saved to DB in this scanning interval
+    const states = await functions.getCurrentStateOfWatchdogs(watchdogs, activeWatchdogsResults, alivePassiveWIDs);
+    console.log(style['lightBlue'], `${level2}Generated ${states.length} state(s) for this scanning run`);
+    console.log(style['lightBlue'], `${level2}${states.filter(value => value.status === 1).length} state(s) have ok status`);
+    console.log(style['lightBlue'], `${level2}${states.filter(value => value.status === 0).length} state(s) have not ok status`);
 
     //########################################################################//
-    console.log(style['lightBlue'], `${level1}Step #${stepCount++} - Saving logs to DB`);
+    console.log(style['lightBlue'], `${level1}Step #${stepCount++} - Updating and/or adding logs in DB`);
     //########################################################################//
 
-    // Write acutal logs into database
-    const writeLogsResult = await handleDB.writeLogs(logs);
-    console.log(style['lightBlue'], `${level2}${writeLogsResult}`);
+    // Save / update acutal logs in database
+    const logsResult = await handleDB.updateAddLogs(states);
+    console.log(style['lightBlue'], `${level2}${logsResult}`);
 
     //########################################################################//
     console.log(style['lightBlue'], `${level1}Step #${stepCount++} - Handling email notifications`);
@@ -155,19 +145,20 @@ async function scan(): Promise<void> {
       email: string;
       name: string;
       note: string;
+      threshold: number;
     }
     let watchdogsToNotify: WatchdogsToNotify[] = []; // This will hold Watchdog IDs with associated status change (0 or 1), later used to send notification emails in bulk
-    watchdogs.forEach((watchdog, index) => {
+    watchdogs.forEach((watchdog) => {
 
       // Only do this for enabled Watchdog with: valid and activated email address, enabled notifications
       if (watchdog.email && watchdog.email_active === 1 && watchdog.email_notif === 1) {
 
 
-        // Find log associated to current Watchdog
-        const wLog = logs.find(log => log.id_watchdog === watchdog.id);
+        // Find state associated to current Watchdog
+        const wState = states.find(state => state.id_watchdog === watchdog.id);
 
-        // If current Watchdog's log has status `0`
-        if (wLog && wLog.status === 0) {
+        // If current Watchdog's state has status `0`
+        if (wState && wState.status === 0) {
 
           // Assign proper value to specific counter
           if (offlineStateCounter[watchdog.id]) {
@@ -179,33 +170,35 @@ async function scan(): Promise<void> {
           }
 
           // Trigger notification, if given counter, reached pre-defined threshold
-          const threshold = 3;
+          const threshold = watchdog.threshold;
           if (offlineStateCounter[watchdog.id] === threshold) {
             watchdogsToNotify.push({
               id: watchdog.id,
-              statusChangedTo: wLog.status,
+              statusChangedTo: wState.status,
               email: watchdog.email,
+              threshold: watchdog.threshold,
               name: watchdog.name,
-              note: wLog.note,
+              note: wState.note,
             })
             offlineStateCounter[watchdog.id] = true;
           }
 
         }
 
-        // Delete counter, in case log status went back to `1` before offline state counter reached threshold
-        if (wLog && wLog.status === 1 && typeof offlineStateCounter[watchdog.id] === 'number') {
+        // Delete the counter, in case state status went back to `1` before offline state counter reached threshold
+        if (wState && wState.status === 1 && typeof offlineStateCounter[watchdog.id] === 'number') {
           delete offlineStateCounter[watchdog.id];
         }
 
-        // Trigger notification and delete counter, in case log status went back to `1`
-        if (wLog && wLog.status === 1 && offlineStateCounter[watchdog.id] === true) {
+        // Trigger notification and delete counter, in case state status went back to `1`
+        if (wState && wState.status === 1 && offlineStateCounter[watchdog.id] === true) {
           watchdogsToNotify.push({
             id: watchdog.id,
-            statusChangedTo: wLog.status,
+            statusChangedTo: wState.status,
             email: watchdog.email,
+            threshold: watchdog.threshold,
             name: watchdog.name,
-            note: wLog.note,
+            note: wState.note,
           })
           delete offlineStateCounter[watchdog.id];
         }
