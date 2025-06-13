@@ -168,8 +168,11 @@ baseRouter.get(`/${snoozePath}`, (req, res) => {
 
   // Remove old logs from wide-scope variable to save memory
   passiveLogs = passiveLogs.filter(log => log.timestamp > Date.now() - toInt(REACT_APP_REPEAT_DELAY) * 2);
-  const msg = `Endpoint [${req.url}] was hit from IP [${req.ip}]`;
-  logger.info(msg);
+  
+  // Log the request
+  // const msg = `Endpoint [${req.url}] was hit from IP [${req.ip}]`;
+  // logger.info(msg);
+  
   res.status(200).send('ok');
 
 });
