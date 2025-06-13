@@ -25,12 +25,16 @@ function Logs() {
     status0: useRef(null),
     status1: useRef(null)
   }; // Using it to get data from input fields
-  const btnSave = useRef(null); // Save button ref
+  const btnSearch = useRef(null); // Save button ref
 
   useEffect(() => {
-    elementToggle.disable(btnSave);
+    let isMounted = true;
+    
+    elementToggle.disable(btnSearch);
     getWatchdogs()
       .then(response => {
+        if (!isMounted) return;
+        
         let watchdogCheckboxes: Array<JSX.Element> = [];
         response.forEach((watchdog: any, index: number) => {
           watchdogCheckboxes.push(
@@ -41,10 +45,18 @@ function Logs() {
           )
         })
         setWatchdogCheckboxes(watchdogCheckboxes);
-        elementToggle.enable(btnSave);
+        if (btnSearch.current) {
+          elementToggle.enable(btnSearch);
+        }
       })
-      .catch(error => {console.log(error)})
+      .catch(error => {
+        if (!isMounted) return;
+        console.log(error);
+      })
 
+    return () => {
+      isMounted = false;
+    };
   }, [])
 
   function generateLogTable(data: any) {
@@ -89,7 +101,7 @@ function Logs() {
 
   function handleSearch() {
 
-    elementToggle.disable(btnSave)
+    elementToggle.disable(btnSearch)
     setStatusMsg(<LoadingIndicator text="Loading logs" />)
     // Collecting user input data from input fields
     // And converting it to query string that will be used in API GET request
@@ -128,12 +140,12 @@ function Logs() {
         .then(response => {
           setStatusMsg(generateStatusMsg(`${response.count} logs found...`, 'good'));
           setLogTable(generateLogTable(response.data));
-          elementToggle.enable(btnSave);
+          elementToggle.enable(btnSearch);
         })
         .catch(error => {
           let err = error ? error : 'Server error';
           setStatusMsg(generateStatusMsg(err, 'bad'));
-          elementToggle.enable(btnSave);
+          elementToggle.enable(btnSearch);
         });
 
   }
@@ -185,7 +197,7 @@ function Logs() {
           { watchdogCheckboxes }
         </div>
       <br />
-      <button onClick={handleSearch} ref={btnSave}>Search logs</button>
+      <button onClick={handleSearch} ref={btnSearch}>Search logs</button>
       <span className="marginLeft">
         { statusMsg }
       </span>

@@ -101,14 +101,14 @@ function Login(props: Props) {
       <div>
 
         <div className="floatBlock" style={{ width: '50%' }}>
-          <h1>User login</h1>
+          <h1 className="section-heading">User login</h1>
           <input id="pw" className="textInput" type="password" placeholder="password" onKeyUp={handleLogin} />
           <button onClick={handleLogin} className="marginLeft" ref={btnLogin}>Login</button>
           <div className="sameLine">{statusLogin}</div>
         </div>
 
         <div className="floatBlock">
-          <h1>Create demo account</h1>
+          <h1 className="section-heading">Create demo account</h1>
           <div id="newAccountForm">
             { registerForm }
           </div>

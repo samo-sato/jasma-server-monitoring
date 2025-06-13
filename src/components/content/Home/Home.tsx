@@ -42,7 +42,7 @@ function Home() {
   if (!statsData) {
     return (
       <article>
-        <p>{ serErr }</p>
+        { <LoadingIndicator text="Loading stats" /> }
       </article>
     )
   }
@@ -79,7 +79,7 @@ function Home() {
   } else {
     return (
       <article>
-        { <LoadingIndicator text="Loading stats" /> }
+        <p>{ serErr }</p>
       </article>
     )
   }

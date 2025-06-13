@@ -101,62 +101,110 @@ const handleDB = {
         }));
 
         // Begin transaction
-        db.run('BEGIN TRANSACTION');
+        db.run('BEGIN TRANSACTION', async (beginErr) => {
+          if (beginErr) {
+            handleError(beginErr, 'Failed to begin transaction');
+            return reject(beginErr);
+          }
 
-        // Handle new logs
-        if (logsToAdd.length > 0) {
-          const insertStmt = db.prepare(`
-            INSERT INTO Watchdog_log (id_watchdog, status, timestamp_start, timestamp_stop, note)
-            VALUES (?, ?, ?, ?, ?)
-          `);
+          try {
+            // Insert new logs
+            if (logsToAdd.length > 0) {
+              await new Promise<void>((res, rej) => {
+                const insertStmt = db.prepare(`
+                  INSERT INTO Watchdog_log (id_watchdog, status, timestamp_start, timestamp_stop, note)
+                  VALUES (?, ?, ?, ?, ?)
+                `);
 
-          logsToAdd.forEach(log => {
-            insertStmt.run(
-              log.id_watchdog,
-              log.status,
-              log.timestamp_start,
-              log.timestamp_stop,
-              log.note
-            );
-          });
-          insertStmt.finalize();
-        }
+                let pending = logsToAdd.length;
+                logsToAdd.forEach(log => {
+                  insertStmt.run(
+                    log.id_watchdog,
+                    log.status,
+                    log.timestamp_start,
+                    log.timestamp_stop,
+                    log.note,
+                    function (err: Error | null) {
+                      if (err) {
+                        insertStmt.finalize();
+                        rej(err);
+                      } else if (--pending === 0) {
+                        insertStmt.finalize((finalizeErr) => {
+                          if (finalizeErr) rej(finalizeErr);
+                          else res();
+                        });
+                      }
+                    }
+                  );
+                });
+                if (logsToAdd.length === 0) {
+                  insertStmt.finalize((finalizeErr) => {
+                    if (finalizeErr) rej(finalizeErr);
+                    else res();
+                  });
+                }
+              });
+            }
 
-        // Handle updates
-        if (logsToUpdate.length > 0) {
-          const updateStmt = db.prepare(`
-            UPDATE Watchdog_log 
-            SET status = ?, timestamp_stop = ?, note = ?
-            WHERE id_watchdog = ? AND id = (
-              SELECT id FROM Watchdog_log 
-              WHERE id_watchdog = ? 
-              ORDER BY timestamp_stop DESC LIMIT 1
-            )
-          `);
+            // Update existing logs
+            if (logsToUpdate.length > 0) {
+              await new Promise<void>((res, rej) => {
+                const updateStmt = db.prepare(`
+                  UPDATE Watchdog_log 
+                  SET status = ?, timestamp_stop = ?, note = ?
+                  WHERE id_watchdog = ? AND id = (
+                    SELECT id FROM Watchdog_log 
+                    WHERE id_watchdog = ? 
+                    ORDER BY timestamp_stop DESC LIMIT 1
+                  )
+                `);
 
-          logsToUpdate.forEach(log => {
-            updateStmt.run(
-              log.status,
-              log.timestamp_stop,
-              log.note,
-              log.id_watchdog,
-              log.id_watchdog
-            );
-          });
-          updateStmt.finalize();
-        }
+                let pending = logsToUpdate.length;
+                logsToUpdate.forEach(log => {
+                  updateStmt.run(
+                    log.status,
+                    log.timestamp_stop,
+                    log.note,
+                    log.id_watchdog,
+                    log.id_watchdog,
+                    function (err: Error | null) {
+                      if (err) {
+                        updateStmt.finalize();
+                        rej(err);
+                      } else if (--pending === 0) {
+                        updateStmt.finalize((finalizeErr) => {
+                          if (finalizeErr) rej(finalizeErr);
+                          else res();
+                        });
+                      }
+                    }
+                  );
+                });
+                if (logsToUpdate.length === 0) {
+                  updateStmt.finalize((finalizeErr) => {
+                    if (finalizeErr) rej(finalizeErr);
+                    else res();
+                  });
+                }
+              });
+            }
 
-        // Commit transaction
-        db.run('COMMIT', (err) => {
-          if (err) {
+            // Commit transaction
+            db.run('COMMIT', (err) => {
+              if (err) {
+                db.run('ROLLBACK');
+                handleError(err, 'Failed to commit transaction');
+                reject(err);
+              } else {
+                resolve(`Added ${logsToAdd.length} new logs and updated ${logsToUpdate.length} existing logs`);
+              }
+            });
+          } catch (err) {
             db.run('ROLLBACK');
-            handleError(err, 'Failed to commit transaction');
+            handleError(err, 'Failed to process logs');
             reject(err);
-          } else {
-            resolve(`Added ${logsToAdd.length} new logs and updated ${logsToUpdate.length} existing logs`);
           }
         });
-
       } catch (error) {
         db.run('ROLLBACK');
         handleError(error, 'Failed to process logs');

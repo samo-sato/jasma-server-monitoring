@@ -85,7 +85,17 @@ const rootLimiter = rateLimit({
   }
 });
 
+/*
+// Test delay middleware for simulating slow responses
+const testDelay = (req: any, res: any, next: any) => {
+  // Add a 2 second delay (2000ms) to simulate slow server response
+  setTimeout(() => {
+    next();
+  }, 2000);
+};
+*/
 // Apply basic rate limiter on all endpoints
+//app.use('/', testDelay, rootLimiter);
 app.use('/', rootLimiter);
 
 
