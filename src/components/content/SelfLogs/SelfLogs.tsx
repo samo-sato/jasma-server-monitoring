@@ -4,14 +4,9 @@ import { getSelfLogs } from '../../../fetchAPI.js';
 import LoadingIndicator from '../../LoadingIndicator.jsx';
 
 function SelfLogs() {
-
   // useState
-  const loadingIndicator = (
-  <tr key={0}>
-    <td colSpan={3}><LoadingIndicator text="Loading logs" /></td>
-  </tr>
-  );
-  const [logRows, setLogRows] = useState([loadingIndicator]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [logRows, setLogRows] = useState<Array<JSX.Element>>([]);
 
   // useEffect ran twice workaround
   const effectRan = useRef(false);
@@ -38,15 +33,18 @@ function SelfLogs() {
             )
           })
           setLogRows(jsxRows);
+          setIsLoading(false);
         })
-        .catch(error => {console.log(error)})
+        .catch(error => {
+          console.log(error);
+          setIsLoading(false);
+        })
 
       // useEffect ran twice workaround
       return () => {
         effectRan.current = true;
       }
     }
-
   }, [])
 
   return (
@@ -59,18 +57,22 @@ function SelfLogs() {
         <li key={2}>The server hosting this app lost its internet connection</li>
       </ul>
       { generateTableNote() }
-      <table>
-      <thead>
-        <tr>
-          <th style={{textAlign: 'right'}}>Started</th>
-          <th style={{textAlign: 'center'}}>--&gt;</th>
-          <th style={{textAlign: 'left'}}>Stopped</th>
-        </tr>
-      </thead>
-        <tbody>
-          { logRows }
-        </tbody>
-      </table>
+      {isLoading ? (
+        <LoadingIndicator text="Loading logs" />
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th style={{textAlign: 'right'}}>Started</th>
+              <th style={{textAlign: 'center'}}>--&gt;</th>
+              <th style={{textAlign: 'left'}}>Stopped</th>
+            </tr>
+          </thead>
+          <tbody>
+            { logRows }
+          </tbody>
+        </table>
+      )}
     </article>
   )
 }

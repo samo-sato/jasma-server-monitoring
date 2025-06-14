@@ -81,11 +81,11 @@ function Logs() {
           <table>
             <thead>
               <tr>
-                <td>From</td>
-                <td>To</td>
-                <td>Watchdog</td>
-                <td>Status</td>
-                <td style={{width:'45%'}}>Note</td>
+                <th>From</th>
+                <th>To</th>
+                <th>Watchdog</th>
+                <th>Status</th>
+                <th style={{width:'45%'}}>Note</th>
               </tr>
             </thead>
             <tbody className="logTable">
