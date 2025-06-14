@@ -133,7 +133,7 @@ function Edit() {
   if (status.loaded && status.found && watchdog && watchdog.id) { // Item found and loaded
     return (
       <article>
-        <h1>Edit "<i>{watchdog.name}</i>" watchdog</h1>
+        <h2>Edit "<i>{watchdog.name}</i>" watchdog</h2>
         <div className="sameLine">
           <input
             type="text"

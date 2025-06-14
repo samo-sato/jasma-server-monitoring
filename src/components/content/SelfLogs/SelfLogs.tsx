@@ -48,7 +48,7 @@ function SelfLogs() {
 
   return (
     <article>
-      <h1>Self logs</h1>
+      <h2>Self logs</h2>
       <p>These logs show app backend <span className="good">running</span> / <span className="bad">not-running</span> time periods.</p>
       <p>Any gap in self-logs would be caused by one of the following:</p>
       <ul>

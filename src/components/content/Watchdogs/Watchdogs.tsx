@@ -69,7 +69,7 @@ function Watchdogs() {
   } else if (watchdogsData) {
     return (
       <article>
-        <h1>Watchdogs</h1>
+        <h2>Watchdogs</h2>
         <List watchdogs={watchdogsData} />
         <div>
           {message}

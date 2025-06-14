@@ -145,7 +145,7 @@ function Add() {
   if (status.loaded && status.found) { // Item found and loaded
     return (
       <article>
-        <h1>Add new watchdog</h1>
+        <h2>Add new watchdog</h2>
         <div className="sameLine">
           <input
             type="text"

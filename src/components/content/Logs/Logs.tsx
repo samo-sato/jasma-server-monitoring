@@ -171,7 +171,7 @@ function Logs() {
 
   return (
     <article>
-      <h1>Logs</h1>
+      <h2>Logs</h2>
       <label htmlFor="fromDate">From </label>
       <input type="date" id="fromDate" ref={inputs.dFrom} defaultValue={getToday()} className="textInput" />
       <label htmlFor="toDate"> to </label>

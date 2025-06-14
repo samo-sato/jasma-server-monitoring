@@ -87,7 +87,7 @@ function Settings() {
 
   return (
     <article>
-      <h1>Settings</h1>
+      <h2>Settings</h2>
       { mainContent }
       <div className="sameLine">{ statusMsg }</div>
     </article>

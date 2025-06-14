@@ -69,7 +69,7 @@ function Home() {
 
     return (
       <article>
-        <h1>Basic stats</h1>
+        <h2>Basic stats</h2>
         <p className={cNameOff}><b>{readStats.getOffline()}</b> Watchdog(s) signaling off-line status</p>
         <p className={cNameOn}><b>{readStats.getOnline()}</b> Watchdog(s) signaling on-line status</p>
         <p><i>{ monitoringIntervalNote }</i></p>
