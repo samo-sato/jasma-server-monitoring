@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useState } from 'react';
 import LoadingIndicator from '../../LoadingIndicator.jsx';
 import { getWatchdogs, getLogs } from '../../../fetchAPI.js';
-import { generateStatusMsg, elementToggle } from '../../../functions.jsx';
+import { generateStatusMsg, elementToggle, formatLocalDateTime, generateTableNote } from '../../../functions.jsx';
 
 function Logs() {
 
@@ -66,8 +66,8 @@ function Logs() {
         let cName = row.status === 1 ? 'good' : (row.status === 0 ? 'bad' : ''); // Rows with `good` status will be different style than rows with "bad" status
         rows.push(
           <tr key={index} className={cName}>
-            <td>{row.datetime_start}</td>
-            <td>{row.datetime_stop}</td>
+            <td>{formatLocalDateTime(row.timestamp_start)}</td>
+            <td>{formatLocalDateTime(row.timestamp_stop)}</td>
             <td>{row.watchdog}</td>
             <td>{row.status}</td>
             <td>{row.note}</td>
@@ -201,7 +201,7 @@ function Logs() {
       <span className="marginLeft">
         { statusMsg }
       </span>
-      <br />
+        { generateTableNote() }
       <div>
         { logTable }
       </div>

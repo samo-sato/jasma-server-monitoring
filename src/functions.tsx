@@ -84,3 +84,38 @@ export function generateHelp(text: string) {
 export function generateSnoozeUrl(wid: string) {
   return `${urlBase(urlBaseEnvs, true)}/${snoozePath}?wid=${wid}`
 }
+
+/**
+ * Format timestamp in milliseconds to local timezone date and time
+ * @param timestamp - Unix timestamp in milliseconds
+ * @returns Formatted date and time string in format: YYYY-MM-DD HH:mm
+ * @example
+ * // If timestamp is 1708952340000 (2024-02-26 14:19:00 UTC)
+ * // and user is in New York (UTC-5)
+ * formatLocalDateTime(1708952340000) // returns "2024-02-26 09:19"
+ */
+export function formatLocalDateTime(timestamp: number): string {
+  const date = new Date(timestamp);
+  
+  // Get local date components
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+/**
+ * Generate note for logs table
+ * @returns Note as JSX
+ */
+export function generateTableNote(): JSX.Element {
+  return (
+    <>
+      <p>Newest logs are shown first</p>
+      <p>Browser based time is used</p>
+    </>
+  )
+}
