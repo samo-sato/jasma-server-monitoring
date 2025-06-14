@@ -998,6 +998,7 @@ export function getSelfLogs(): Promise<GenericPromiseReturn> {
         stop
       FROM
         Self_log
+      ORDER BY start DESC
       ;`;
 
     interface RowsSelfLogs {
