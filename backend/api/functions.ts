@@ -14,7 +14,7 @@ import { saveToken } from './handleDB.js';
 
 // Import and validate environment variables
 const JASMA_JWT_SECRET             = validateEnv(process.env.JASMA_JWT_SECRET, true);
-const JASMA_TOKEN_EXPIRATION       = validateEnv(process.env.JASMA_TOKEN_EXPIRATION, false);
+const JASMA_TOKEN_EXPIRATION       = validateEnv(process.env.JASMA_TOKEN_EXPIRATION, true) || '24h'; // Default to 24 hours if not set
 const REACT_APP_MIN_WD_NAME_LENGTH = validateEnv(process.env.REACT_APP_MIN_WD_NAME_LENGTH, true);
 const REACT_APP_MAX_WD_NAME_LENGTH = validateEnv(process.env.REACT_APP_MAX_WD_NAME_LENGTH, true);
 const REACT_APP_MIN_WD_URL_LENGTH  = validateEnv(process.env.REACT_APP_MIN_WD_URL_LENGTH, true);
