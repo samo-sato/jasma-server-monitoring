@@ -7,7 +7,7 @@ import { generateStatusMsg, elementToggle, formatLocalDateTime, generateTableNot
 function Logs() {
 
   // React `useState` hook
-  const [watchdogCheckboxes, setWatchdogCheckboxes] = useState<any>(<LoadingIndicator text="Loading items" />);
+  const [watchdogSelect, setWatchdogSelect] = useState<any>(<LoadingIndicator text="Loading items" />);
   const [statusMsg, setStatusMsg] = useState<string | JSX.Element>('');
   const [logTable, setLogTable] = useState(generateLogTable(null));
 
@@ -16,6 +16,7 @@ function Logs() {
     dTo: React.RefObject<HTMLInputElement>;
     status0: React.RefObject<HTMLInputElement>;
     status1: React.RefObject<HTMLInputElement>;
+    watchdog: React.RefObject<HTMLSelectElement>;
   }
 
   // React `useRef` hook
@@ -23,7 +24,8 @@ function Logs() {
     dFrom: useRef(null),
     dTo: useRef(null), 
     status0: useRef(null),
-    status1: useRef(null)
+    status1: useRef(null),
+    watchdog: useRef(null)
   }; // Using it to get data from input fields
   const btnSearch = useRef(null); // Save button ref
 
@@ -35,16 +37,19 @@ function Logs() {
       .then(response => {
         if (!isMounted) return;
         
-        let watchdogCheckboxes: Array<JSX.Element> = [];
-        response.forEach((watchdog: any, index: number) => {
-          watchdogCheckboxes.push(
-            <div key={index}>
-              <input type="checkbox" id={`wc${index}`} value={watchdog.id} className="wc" defaultChecked={true} />
-              <label htmlFor={`wc${index}`}>{watchdog.name}</label>
-            </div>
+        let options: Array<JSX.Element> = [];
+        response.forEach((watchdog: any) => {
+          options.push(
+            <option key={watchdog.id} value={watchdog.id}>
+              {watchdog.name}
+            </option>
           )
         })
-        setWatchdogCheckboxes(watchdogCheckboxes);
+        setWatchdogSelect(
+          <select ref={inputs.watchdog} className="textInput">
+            {options}
+          </select>
+        );
         if (btnSearch.current) {
           elementToggle.enable(btnSearch);
         }
@@ -100,7 +105,6 @@ function Logs() {
   }
 
   function handleSearch() {
-
     elementToggle.disable(btnSearch)
     setStatusMsg(<LoadingIndicator text="Loading logs" />)
     // Collecting user input data from input fields
@@ -117,23 +121,9 @@ function Logs() {
       queryString += `&status0=${st0}`;
       queryString += `&status1=${st1}`;
 
-      // Watchdogs constraints
-
-        // convert html list of Watchdog checkboxes to javascript array with checked only Watchdogs
-        let checkedWatchdogs: Array<string> = [];
-        document.querySelectorAll('.wc').forEach((item) => {
-          if ((item as HTMLInputElement).checked) {
-            checkedWatchdogs.push((item as HTMLInputElement).value);
-          }
-        });
-
-        // Adding checked watchdogs to query string (id's separated by comma)
-        let list = '';
-        for (let i = 0; i < checkedWatchdogs.length; i++) {
-          let separator = (i+1) === checkedWatchdogs.length ? '' : ','
-          list += `${checkedWatchdogs[i]}${separator}`
-        }
-        queryString += `&watchdogs=${list}`;
+      // Watchdog constraint
+      let selectedWatchdog = inputs.watchdog.current?.value;
+      queryString += `&watchdogs=${selectedWatchdog}`;
 
       // Initiating API call
       getLogs(queryString)
@@ -147,7 +137,6 @@ function Logs() {
           setStatusMsg(generateStatusMsg(err, 'bad'));
           elementToggle.enable(btnSearch);
         });
-
   }
 
   // Get today date in following format "YYYY-MM-DD"
@@ -160,13 +149,6 @@ function Logs() {
     const day = String(today.getUTCDate()).padStart(2, '0');
     const todayFormatted = `${year}-${month}-${day}`; // Combine the year, month, and day into a single string in the desired format
     return todayFormatted;
-  }
-
-  // Select / unselect all Watchdog checkboxes
-  function selectAll(e: any) {
-    document.querySelectorAll('.wc').forEach(item => {
-      (item as HTMLInputElement).checked = (e.target.checked) ? true : false;
-    });
   }
 
   return (
@@ -188,14 +170,10 @@ function Logs() {
       <input type="checkbox" value="1" id="cStatus1" ref={inputs.status1} defaultChecked={true} />
       <label htmlFor="cStatus1">"1" online</label>
 
-      <p>Watchdog association: </p>
-        <div>
-          <input type="checkbox" id="wcsa" defaultChecked={true} onClick={selectAll} />
-          <label htmlFor="wcsa">select/unselect all</label>
-        </div>
-        <div className="sameLine">
-          { watchdogCheckboxes }
-        </div>
+      <p>Select Watchdog: </p>
+      <div className="sameLine">
+        { watchdogSelect }
+      </div>
       <br />
       <button onClick={handleSearch} ref={btnSearch}>Search logs</button>
       <span className="marginLeft">
