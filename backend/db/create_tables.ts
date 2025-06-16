@@ -89,18 +89,6 @@ const tableData = [
         FOREIGN KEY(id_watchdog) REFERENCES Watchdog(id)
       );`
     }
-  },
-  {
-    // Table `Self_log` will contain logs from this web app itself, it is for tracking online/offline time periods of this app
-    name: 'Self_log',
-    get sql() {
-      return `
-      CREATE TABLE IF NOT EXISTS ${this.name} (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        start	INTEGER NULL,
-        stop INTEGER NULL
-      );`
-    }
   }
 ]
 

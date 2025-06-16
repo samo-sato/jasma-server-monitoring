@@ -390,33 +390,6 @@ export function updateSettings(settings: Settings) {
     })
 }
 
-// Get app's self logs
-export function getSelfLogs() {
-  const resource = `${baseUrl}/${restrictedPath}/selflogs`;
-  return fetch(resource, options)
-    .then(response => {
-      handleStatusCode(response.status)
-      if (response.ok) {
-        return response.json();
-      } else {
-        return new Promise((resolve, reject) => {
-          response.json()
-            .then(error => {
-              reject(error.data);
-            })
-            .catch(error => {
-              reject(error.data);
-            })
-        })
-      }
-    })
-    .catch(error => {
-      return new Promise((resolve, reject) => {
-        reject(error)
-      })
-    })
-}
-
 // Get app's logs
 export function getLogs(queryString: string) {
   const resource = `${baseUrl}/${restrictedPath}/logs${queryString}`;

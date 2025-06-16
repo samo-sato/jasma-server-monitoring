@@ -57,7 +57,7 @@ Multiple non-master user accounts (demo accounts) can be created from the main w
 In the frontend web UI's upper corner menu, User can toggle between *light/dark/auto* theme modes. In case auto theme mode is toggled, switching between light or dark theme styles is performed automatically based on the current hour of day on the client side. These threshold hours can be modified in [environment variables](#set-environment-variables).
 
 ### Logging
-Logging performed in *"runs"* periodically at specific time intervals, as defined in [environment variables](#set-environment-variables). During each *"run"*, different types of logs are being generated, stored or displayed and if enabled, email notifications might be sent. There are four types of logs:
+Logging performed in *"runs"* periodically at specific time intervals, as defined in [environment variables](#set-environment-variables). During each *"run"*, different types of logs are being generated, stored or displayed and if enabled, email notifications might be sent. There are three types of logs:
 
 1. **Main logs**
 Each log is associated with a specific Watchdog and tracks the duration of server status changes. Logs can be viewed on the frontend web UI *Logs* page. Different filters can be applied on search function to display only specific types of logs. These logs are stored in designated database table. Each log entry contains start and stop timestamps to track how long a particular status lasted. Main logs can have one of the following status:
@@ -65,14 +65,10 @@ Each log is associated with a specific Watchdog and tracks the duration of serve
     - **0** => *not ok*, server has not provided valid response
     - **1** => *ok*, server has provided valid response
 
-2. **Self-logs**
-Any previous outages or other breaks in server monitoring app are picked up by self-logs and can be viewed in frontend web UI *Self-logs* page.
-These logs are stored in designated database table. Self-logs are global for whole app and not User specific.
-
-3. **System logs**
+2. **System logs**
 Information about errors and selected events that occur during backend code execution is stored into `backend/logs` file as JSON. Logging is done by [Winston](https://www.npmjs.com/package/winston) logger module.
 
-4. **Real time console logging (CLI)**
+3. **Real time console logging (CLI)**
 As `backend/server.js` runs in the background, structured information from real-time server monitoring can be viewed in the console output. This feature is especially useful for debugging and quickly grasping the operation of the application.
 
 ### Rate Limiting

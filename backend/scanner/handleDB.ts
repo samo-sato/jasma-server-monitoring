@@ -32,52 +32,6 @@ interface getLastSelfLogResult {
 // Object containing functions performing database operations used in server monitoring function
 const handleDB = {
 
-  // Add self log to DB
-  // `Self logs` are logs that indicate if main backend script is running or not
-  writeSelfLog: function (isAfterOutage: boolean) {
-      return new Promise((resolve, reject) => {
-      // Running after app's backend outage
-      if (isAfterOutage) { // Add 2 logs, first log indicating that app's backend started and second indicating that app's backend stopped working (this log will be updated in future runs with fresh timestamp until something breaks and the `stop` timestamp remains indicating when it broke)
-        const sql = `
-        INSERT
-          INTO
-        Self_log
-          (start, stop)
-        VALUES
-          ($timestamp, null),
-          (null, $timestamp)
-        ;`;
-        const params = { $timestamp: Date.now() };
-        db.run(sql, params, function (error) {
-          if (error) {
-            handleError(error, 'Adding "start" and "stop" self-log timestamps failed');
-            reject(error.message);
-          } else {
-            resolve(`Added "start" and "stop" self-log timestamps`);
-          }
-        })
-      } else { // Updating `stop` timestamp with fresh timestamp
-        const sql = `
-        UPDATE
-          Self_log
-        SET
-          stop = $timestamp
-        WHERE
-          id = (SELECT MAX(id) FROM Self_log);`;
-          const params = { $timestamp: Date.now() }
-        db.run(sql, params, function (error) {
-          if (error) {
-            handleError(error, 'Updating "stop" self-log timestamp failed');
-            reject(error.message);
-          } else {
-            resolve(`Updated "stop" self-log timestamp`);
-          }
-        })
-      }
-
-    })
-  },
-
   // Save / update watchdog logs, take data from argument
   updateAddLogs: async function (states: WatchdogState[]): Promise<string> {
     return new Promise(async (resolve, reject) => {
@@ -246,22 +200,6 @@ const handleDB = {
       })
   },
 
-  // Get latest self log
-  getLastSelfLog: function (): Promise<getLastSelfLogResult> {
-    return new Promise((resolve, reject) => {
-      db.get('SELECT start, stop FROM Self_log WHERE id = (SELECT MAX(id) FROM Self_log);',
-      function(error, row: getLastSelfLogResult) {
-        if (error) {
-          const msg = 'Getting latest self-log failed';
-          handleError(error, msg);
-          reject(msg);
-        } else {
-          resolve(row);
-        }
-      })
-    })
-  },
-
   // Get last log with associated Watchdog ID
   getLastLog: function (id_watchdog: string): Promise<Log | undefined> {
     return new Promise((resolve, reject) => {
@@ -280,7 +218,6 @@ const handleDB = {
       })
     })
   }
-
 
 }
 

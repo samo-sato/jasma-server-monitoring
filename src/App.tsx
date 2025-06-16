@@ -10,7 +10,6 @@ import Watchdogs from './components/content/Watchdogs/Watchdogs.jsx';
 import Edit from './components/content/Watchdogs/Edit.jsx';
 import Add from './components/content/Watchdogs/Add.jsx';
 import Logs from './components/content/Logs/Logs.jsx';
-import SelfLogs from './components/content/SelfLogs/SelfLogs.jsx';
 import Settings from './components/content/Settings/Settings.jsx';
 import About from './components/content/About/About.jsx';
 import New from './components/content/New/New.jsx';
@@ -56,12 +55,6 @@ const pages = [
   {
     slug: 'logs',
     name: 'Logs',
-    menuItem: true,
-    auth: true
-  },
-  {
-    slug: 'self-logs',
-    name: 'Self logs',
     menuItem: true,
     auth: true
   },
@@ -307,7 +300,6 @@ function App() {
                 </Route>
                 <Route path="/add-watchdog" element={<Add />} />
                 <Route path="/logs" element={<Logs />} />
-                <Route path="/self-logs" element={<SelfLogs />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/new" element={<New pw={pw} />} />

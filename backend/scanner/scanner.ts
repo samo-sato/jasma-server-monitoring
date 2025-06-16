@@ -71,24 +71,6 @@ async function scan(): Promise<void> {
     const watchdogs = await handleDB.getEnabledWatchdogs();
     console.log(style['lightBlue'], `${level2}${watchdogs.length} Watchdog(s) loaded`);
 
-    // Get latest self log
-    const lastSelfLog = await handleDB.getLastSelfLog();
-    console.log(style['lightBlue'], `${level2}Last self-log loaded`);
-
-    // Determine, if app's backend is after outage or not
-    let isAfterOutage = true;
-    if (
-      lastSelfLog && // Missing self logs are indicating that app's backend is after outage
-      (delay * 1.5) > (Date.now() - lastSelfLog.stop) // Significant gap between last self log timestamp and current timestamp is indicating that app's backend is after outage
-    ) {
-      isAfterOutage = false // App's backend is (probably) NOT after outage
-      console.log(style['lightBlue'], `${level2}This script is not running after outage`);
-    }
-
-    if (isAfterOutage) {
-      console.log(style['lightBlue'], `${level2}This script is running after outage or first time`);
-    }
-
     //########################################################################//
     console.log(style['lightBlue'], `${level1}Step #${stepCount++} - Checking Watchdogs in active mode`);
     //########################################################################//
@@ -215,6 +197,10 @@ async function scan(): Promise<void> {
       }
     })
 
+    //########################################################################//
+    console.log(style['lightBlue'], `${level1}Step #${stepCount++} - Sending email notifications`);
+    //########################################################################//
+
     // Send email notifications
     const mailingResults = functions.notify(watchdogsToNotify);
     await mailingResults
@@ -232,14 +218,6 @@ async function scan(): Promise<void> {
       .catch(error => {
         console.log(style['lightBlue'], `${level2}${error}`);
       })
-
-    //########################################################################//
-    console.log(style['lightBlue'], `${level1}Step #${stepCount++} - Creating and saving "self logs"`);
-    //########################################################################//
-
-    // Write self log into database
-    const selfLogResult = await handleDB.writeSelfLog(isAfterOutage);
-    console.log(style['lightBlue'], `${level2}${selfLogResult}`);
 
     //########################################################################//
     console.log(style['lightBlue'], `${level1}Step #${stepCount++} - Waiting for next run`);

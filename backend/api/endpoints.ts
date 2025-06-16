@@ -559,18 +559,6 @@ authRouter.get('/logs', async (req, res) => {
   }
 });
 
-// Get app's self logs
-authRouter.get('/selflogs', async (req, res) => {
-  try {
-    const result = await handleDB.getSelfLogs();
-    res.status(result.code).send(result.data);
-  } catch (error) {
-    const msg = `GET failed to get self-logs`;
-    const code = handleError(error, msg);
-    res.status(code).send(msg);
-  }
-});
-
 /**
  * Saving auth token string to http cookie
  * @param token String representing token that will be saved to http cookie
