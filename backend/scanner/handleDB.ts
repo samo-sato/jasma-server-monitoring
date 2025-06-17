@@ -10,6 +10,11 @@ import { handleError } from '../functions.js';
 // Import types
 import { Log, WatchdogState, needNewLog } from './functions.js';
 
+// Validate environment variables
+import { validateEnv, toInt } from '../../src/utils.js';
+
+const REACT_APP_REPEAT_DELAY = validateEnv(process.env.REACT_APP_REPEAT_DELAY, true);
+
 // Interfaces
 export interface GetEnabledWatchdogsResponse {
   id: string;
@@ -23,12 +28,6 @@ export interface GetEnabledWatchdogsResponse {
   email_active: number;
 }
 
-// Interface for results of getting latest self log
-interface getLastSelfLogResult {
-  start: number;
-  stop: number;
-}
-
 // Object containing functions performing database operations used in server monitoring function
 const handleDB = {
 
@@ -36,21 +35,34 @@ const handleDB = {
   updateAddLogs: async function (states: WatchdogState[]): Promise<string> {
     return new Promise(async (resolve, reject) => {
       try {
+
         let logsToAdd: Log[] = [];
         let logsToUpdate: Log[] = [];
 
         // First, determine which logs need to be added vs updated
         await Promise.all(states.map(async state => {
-          const log: Log = {
-            ...state,
-            timestamp_start: Date.now(),
-            timestamp_stop: Date.now()
-          };
-          const needsNew = await needNewLog(log);
+          const lastLog = await handleDB.getLastLog(state.id_watchdog);
+          const needsNew = await needNewLog(state, lastLog);
           if (needsNew) {
-            logsToAdd.push(log);
+            logsToAdd.push({
+              id_watchdog: state.id_watchdog,
+              status: state.status,
+              note: state.note,
+              timestamp_start: Date.now(),
+              timestamp_stop: Date.now(),
+              counter: 1,
+              delay: toInt(REACT_APP_REPEAT_DELAY)
+            });
           } else {
-            logsToUpdate.push(log);
+            logsToUpdate.push({
+              id_watchdog: state.id_watchdog,
+              status: state.status,
+              note: state.note,
+              timestamp_start: lastLog?.timestamp_start ?? Date.now(),
+              timestamp_stop: Date.now(),
+              counter: (lastLog?.counter ?? 0) + 1,
+              delay: toInt(REACT_APP_REPEAT_DELAY)
+            });
           }
         }));
 
@@ -66,8 +78,16 @@ const handleDB = {
             if (logsToAdd.length > 0) {
               await new Promise<void>((res, rej) => {
                 const insertStmt = db.prepare(`
-                  INSERT INTO Watchdog_log (id_watchdog, status, timestamp_start, timestamp_stop, note)
-                  VALUES (?, ?, ?, ?, ?)
+                  INSERT INTO Watchdog_log (
+                    id_watchdog,
+                    status,
+                    timestamp_start,
+                    timestamp_stop,
+                    counter,
+                    delay,
+                    note
+                  )
+                  VALUES (?, ?, ?, ?, ?, ?, ?)
                 `);
 
                 let pending = logsToAdd.length;
@@ -77,6 +97,8 @@ const handleDB = {
                     log.status,
                     log.timestamp_start,
                     log.timestamp_stop,
+                    log.counter,
+                    toInt(REACT_APP_REPEAT_DELAY),
                     log.note,
                     function (err: Error | null) {
                       if (err) {
@@ -105,7 +127,12 @@ const handleDB = {
               await new Promise<void>((res, rej) => {
                 const updateStmt = db.prepare(`
                   UPDATE Watchdog_log 
-                  SET status = ?, timestamp_stop = ?, note = ?
+                  SET
+                    status = ?,
+                    timestamp_stop = ?,
+                    counter = ?,
+                    delay = ?,
+                    note = ?
                   WHERE id_watchdog = ? AND id = (
                     SELECT id FROM Watchdog_log 
                     WHERE id_watchdog = ? 
@@ -118,6 +145,8 @@ const handleDB = {
                   updateStmt.run(
                     log.status,
                     log.timestamp_stop,
+                    log.counter,
+                    toInt(REACT_APP_REPEAT_DELAY),
                     log.note,
                     log.id_watchdog,
                     log.id_watchdog,
@@ -194,7 +223,7 @@ const handleDB = {
             handleError(error, msg);
             reject(msg);
           } else {
-            resolve(rows)
+            resolve(rows);
           }
         })
       })

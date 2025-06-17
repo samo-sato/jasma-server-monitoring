@@ -5,19 +5,17 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Logger
-import { handleError, logger } from '../functions.js';
+import { handleError } from '../functions.js';
 
 // Import wide scope array variable, in which `passive logs` are stored and regularly updated
 import { passiveLogs } from '../api/endpoints.js';
 
 // Other dependencies
-import { validateEnv } from '../../src/utils.js'; // Validate environment variables
+import { validateEnv, toInt, delayWithMargin } from '../../src/utils.js'; // Validate environment variables
 import nodeFetch from 'node-fetch'; // Fetching resources
 import dns from 'dns'; // Checking internet connection status
-import { toInt } from '../../src/utils.js'; // Convert string to integer
 import { sendMail, SendMailResponse } from '../functions.js'; // Send emails
 import { GetEnabledWatchdogsResponse } from './handleDB.js'; // Interface for Watchdogs
-import handleDB from './handleDB.js'; // Handle database
 
 // Import environment variables
 const REACT_APP_REPEAT_DELAY = validateEnv(process.env.REACT_APP_REPEAT_DELAY, true);
@@ -39,6 +37,8 @@ export interface Log {
   status: number;
   timestamp_start: number;
   timestamp_stop: number;
+  counter: number;
+  delay: number;
   note: string;
 }
 
@@ -302,17 +302,17 @@ export async function getCurrentStateOfWatchdogs(watchdogs: GetEnabledWatchdogsR
 /**
  * Check, if adding new log is needed or updating existing log is needed
  * @param state
+ * @param lastLog
  * @returns `true` if adding new log is needed, `false` if updating existing log is needed
  * Adding new log is needed if any of the following conditions is met:
  *  1) Last log with same Watchdog ID does not exist yet
- *  2) Last log with same Watchdog ID has different status
- *  3) Last log with same Watchdog ID has not been updated lately (last log is older than `delay` ms + 5% buffer)
+ *  2) Last log with same Watchdog ID has different status or note
+ *  3) Last log with same Watchdog ID has not been updated lately (last log is older than `gapThreshold`)
  * Otherwise, updating existing log is needed
 */
-export async function needNewLog(state: WatchdogState) {
+export async function needNewLog(currentState: WatchdogState, lastLog: Log | undefined) {
   return new Promise(async (resolve, reject) => {
     try {
-      const lastLog = await handleDB.getLastLog(state.id_watchdog);
       
       // 1) If no previous log exists, we need a new one
       if (!lastLog) {
@@ -320,17 +320,15 @@ export async function needNewLog(state: WatchdogState) {
         return;
       }
 
-      // 2) If last log has different status, we need a new one
-      if (lastLog.status !== state.status) {
+      // 2) If last log has different status or note, we need a new one
+      if (lastLog.status !== currentState.status || lastLog.note !== currentState.note) {
         resolve(true);
         return;
       }
 
-      // 3) If last log is older than `delay` ms + 5% buffer, we need a new one
+      // 3) If last log is older than `gapThreshold`, we need a new one
       // This ensures we have regular log entries even if status hasn't changed
-      // Adding 5% buffer to account for execution time and slight delays
-      const buffer = Math.floor(delay * 0.05); // 5% of delay
-      if (Date.now() - lastLog.timestamp_stop > delay + buffer) {
+      if (Date.now() - lastLog.timestamp_stop > delayWithMargin(delay)) {
         resolve(true);
         return;
       }

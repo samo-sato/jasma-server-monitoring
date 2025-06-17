@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 import { useState } from 'react';
 import LoadingIndicator from '../../LoadingIndicator.jsx';
 import { getWatchdogs, getLogs } from '../../../fetchAPI.js';
-import { generateStatusMsg, elementToggle, formatLocalDateTime, generateTableNote } from '../../../functions.jsx';
+import { generateStatusMsg, elementToggle, formatLocalDateTime, generateTableNote, generateHelp } from '../../../functions.jsx';
+import { delayWithMargin } from '../../../utils.js';
 
 function Logs() {
 
@@ -67,17 +68,65 @@ function Logs() {
   function generateLogTable(data: any) {
     if (data) {
       let rows: any = [];
+      let i = 0;
       data.forEach((row: any, index: any) => {
+        
         let cName = row.status === 1 ? 'good' : (row.status === 0 ? 'bad' : ''); // Rows with `good` status will be different style than rows with "bad" status
+
+        const doubleArrow = <div style={{ textAlign: 'left', fontSize: '2em', cursor: 'default' }}>&#8597;</div>;
+
+        // Add a standard logs row to the table
         rows.push(
-          <tr key={index} className={cName}>
-            <td>{formatLocalDateTime(row.timestamp_start)}</td>
-            <td>{formatLocalDateTime(row.timestamp_stop)}</td>
-            <td>{row.watchdog}</td>
-            <td>{row.status}</td>
+          <tr key={i} className={cName}>
+            <td>
+              <div style={{ width: 'fit-content' }}>
+                <div>{formatLocalDateTime(row.timestamp_stop)}</div>
+                { doubleArrow }
+                <div>{formatLocalDateTime(row.timestamp_start)}</div>
+              </div>
+            </td>
+            <td>
+              <span>
+                <b>
+                  {row.status}
+                </b>
+              </span>
+              <span>&nbsp;</span>
+              <span>
+                ({row.counter}x)
+              </span>
+            </td>
             <td>{row.note}</td>
           </tr>
         )
+
+        // Check if there is a gap between logs
+        let showMissing = false;
+        if (i < data.length - 1) {
+          const nextRow = data[i + 1];
+          
+          // Check if there's a gap between current row's stop time and next row's start time
+          // Since timestamps are in descending order, we need to subtract in reverse
+          let isGap = row.timestamp_start - nextRow.timestamp_stop > delayWithMargin(row.delay);
+          // console.log(`Gap check: ${row.timestamp_stop} - ${nextRow.timestamp_start} = ${row.timestamp_stop - nextRow.timestamp_start} > ${delayWithMargin(row.delay)} = ${isGap}`);
+          if (isGap) {
+            showMissing = true;
+          }
+        }
+
+        // If there is a gap between logs, add a row to the table with a message
+        if (showMissing) {
+          rows.push(
+            <tr key={`gap-${i}`}>
+              <td>{ doubleArrow }</td>
+              <td>N/A</td>
+              <td style={{ textAlign: 'center' }}>Missing logs{generateHelp('Possible reasons for missing logs in this timeframe:\n - Monitoring service was not working\n - Watchdog was disabled\n - Logs are hidden based on applied filters')}</td>
+            </tr>
+          )
+        }
+        
+        i++;
+
       })
 
       return (
@@ -86,11 +135,9 @@ function Logs() {
           <table>
             <thead>
               <tr>
-                <th>From</th>
-                <th>To</th>
-                <th>Watchdog</th>
+                <th>Time frame</th>
                 <th>Status</th>
-                <th style={{width:'45%'}}>Note</th>
+                <th>Note</th>
               </tr>
             </thead>
             <tbody className="logTable">
@@ -123,12 +170,13 @@ function Logs() {
 
       // Watchdog constraint
       let selectedWatchdog = inputs.watchdog.current?.value;
-      queryString += `&watchdogs=${selectedWatchdog}`;
+      queryString += `&watchdog=${selectedWatchdog}`;
 
       // Initiating API call
       getLogs(queryString)
         .then(response => {
           setStatusMsg(generateStatusMsg(`${response.count} logs found...`, 'good'));
+          // console.log(response.data);
           setLogTable(generateLogTable(response.data));
           elementToggle.enable(btnSearch);
         })

@@ -28,7 +28,7 @@ export interface LogFilterQuery {
   dateto: string;
   status0: string;
   status1: string;
-  watchdogs: string;
+  watchdog: string;
 }
 
 /**
@@ -199,18 +199,16 @@ export const validate = {
       !regex.test(query.dateto) ||
       typeof query.status0 !== 'string' ||
       typeof query.status1 !== 'string' ||
-      typeof query.watchdogs !== 'string'
+      typeof query.watchdog !== 'string'
     ) {
       errors.push('Invalid type');
     }
 
-    // At least one Watchdog should be selected
-    if (query.watchdogs.length === 0) { errors.push('At least one Watchdog should be selected') }
+    // Watchdog should be selected
+    if (query.watchdog.length === 0) { errors.push('Watchdog should be selected') }
 
     // At least one status type should be selected
     if (query.status0 === '0' && query.status1 === '0') { errors.push('At least one status type should be selected') }
-
-
 
     // Date conversion: from `YYYY-MM-DD` format to unix epoch time integer (ms)
     const newDateFrom = new Date(query.datefrom);

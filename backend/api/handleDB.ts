@@ -910,13 +910,15 @@ export function getLogs(filter: LogFilterQuery, uuid: string): Promise<GenericPr
       selectedStatuses.push(1);
     }
 
-    let selectedWatchdogs = filter.watchdogs.split(',');
+    let selectedWatchdog = filter.watchdog;
 
     const sql = `
       SELECT
         Watchdog_log.id,
         Watchdog_log.timestamp_start,
         Watchdog_log.timestamp_stop,
+        Watchdog_log.counter,
+        Watchdog_log.delay,
         Watchdog.name as watchdog,
         Watchdog_log.status,
         Watchdog_log.note
@@ -926,19 +928,20 @@ export function getLogs(filter: LogFilterQuery, uuid: string): Promise<GenericPr
       WHERE
         Watchdog.uuid_user = $uuid AND
         Watchdog_log.id_watchdog = Watchdog.id AND
-        id_watchdog IN (${selectedWatchdogs.map(() => '?').join(', ')}) AND
-        status IN (${selectedStatuses.map(() => '?').join(', ')}) AND
+        id_watchdog = $watchdog AND
+        status IN ($status0, $status1) AND
         timestamp_stop BETWEEN $dateFrom AND $dateTo
       ORDER BY timestamp_stop DESC
       ;`;
 
-    const params = [
-      uuid,
-      ...selectedWatchdogs,
-      ...selectedStatuses,
-      dateFrom,
-      dateTo
-    ]
+    const params = {
+      $uuid: uuid,
+      $watchdog: selectedWatchdog,
+      $status0: selectedStatuses.includes(0) ? 0 : null,
+      $status1: selectedStatuses.includes(1) ? 1 : null,
+      $dateFrom: dateFrom,
+      $dateTo: dateTo
+    }
 
     db.all(sql, params,
     function (error, rows) {

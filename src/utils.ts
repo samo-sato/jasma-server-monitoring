@@ -1,6 +1,13 @@
 // Generic error message related to server issues
 export const serErr = 'Server error, try again later';
 
+// Delay margin for gap threshold calculation
+// This will be added to REACT_APP_REPEAT_DELAY to account for execution time and slight delays inside different functions
+export const delayMargin = 0.05;
+export function delayWithMargin(delay: number): number {
+  return delay + Math.floor(delay * delayMargin);
+}
+
 // Autorefresh timing vairables
 export const refreshDelayShort = 1000; // Milliseconds - used in setInterval
 export const refreshDelayLong = 15000; // Milliseconds - used in setInterval

@@ -83,6 +83,8 @@ const tableData = [
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp_start	INTEGER NOT NULL,
         timestamp_stop	INTEGER NOT NULL,
+        counter	INTEGER NOT NULL,
+        delay	INTEGER NOT NULL,
         id_watchdog	TEXT NOT NULL,
         status	INTEGER NOT NULL,
         note	TEXT NOT NULL,
